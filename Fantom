@@ -1,16 +1,10 @@
-//https://discord.gg/dkaMDj8c6b if you want
-
-
-
 //Updated for the Version 0.7.3391a
 //by Saschahi
 
-//Original Sourcecode Yoinked from: https://github.com/tball1/greyhack-scripts
+//Original Sourcecode Yoinked from the now deleted: https://github.com/tball1/greyhack-scripts
 
-//have a nice day :)
+//Added firewall information after entering target ip address
 
-//Here you can lock the program so other people can't steal it from you and use it
-fantompassword = ""
 
 
 hc=get_shell.host_computer
@@ -20,7 +14,8 @@ crypto = include_lib("/lib/crypto.so")
 if not mx then
 	mx = include_lib(current_path+"/metaxploit.so")
 	if not mx then
-		exit("Please install metaxploit.so in /lib or in installation directory.")
+		print("Please install metaxploit.so in /lib or in installation directory.")
+        print("Hacking commands have been disabled.")
 	end if
 end if
 
@@ -28,24 +23,61 @@ end if
 if not crypto then
 	crypto = include_lib(current_path+"/crypto.so")
 	if not crypto then
-		exit("Please install crypto.so in /lib or in installation directory.")
+		print("Please install metaxploit.so in /lib or in installation directory.")
+        print("Hacking commands have been disabled.")
 	end if
 end if
 
-print("\n<color=#3f3e40>Fantom build 0.4 (Unofficial, by saschahi)</color>")
+print("\n<color=#3f3e40>Fantom build 0.5</color>")
 
 system_message = function(text)
 	print("<color=#3f3e40>[Fantom Notification] > </color>"+text)
 end function
 
 
-if active_user == "root" then
+if not active_user == "root" then
 	system_message("\nRunning Fantom in a root shell is the only way too run most security commands.")
 end if
 
 
 
+finder = function(service)
+
+    r = range(255,1)
+    r.shuffle
+    ip = ""
+
+    for i in range(1,4)
+
+        pull = r.pull
+        ip = ip + pull+"."
+
+        if i == 1 and pull == "192" then
+            ipgen
+        end if
+
+    end for
+    ip = ip[:-1]
+
+    if not is_valid_ip(ip) then
+        ipgen
+    end if
+    if not get_shell.ping(ip) then
+        ipgen
+    end if
+
+    return ip
+end function
+
+
+
+
 hackrouter = function(ip,lan)
+
+    if mx == null or crypto == null then
+        print("Please install metaxploit.so and crypto.so in /lib or in installation directory.")
+        return
+    end if
 	
 	r=get_router(ip)
 	
@@ -66,20 +98,26 @@ hackrouter = function(ip,lan)
 			//------------------------------------------------------------
 			mhome = ex.File("/home")
 			musers = mhome.get_folders
-			for user in musers 																				
+			for user in musers 	
+
 				bankfile = ex.File( "/home/" + user.name + "/Config/Bank.txt") 
+
 				if not bankfile == null then
+
 					bankfilecontent = bankfile.get_content
 					print (bankfile.path + " : " + bankfilecontent) 
+
 					splitted = bankfilecontent.split(":")
+
 					if crypto then 							
-						m0n3y = crypto.decipher(splitted[1])
-						print (m0n3y) 		
-					else
+						money = crypto.decipher(splitted[1])
+						print(money) 		
 					end if
+
 				end if
+
 			end for
-			//------------------------------------------------------------
+
 		end if
 		
 		if typeof(ex) == "shell" then
@@ -133,6 +171,11 @@ end function
 
 
 hack = function(ip,port)
+
+    if mx == null or crypto == null then
+        print("Please install metaxploit.so and crypto.so in /lib or in installation directory.")
+        return
+    end if
 	
 	r=get_router(ip)
 	
@@ -157,23 +200,30 @@ hack = function(ip,port)
 			else
 				print("<color=red>The password file seems too have been deleted...</color>")
 			end if
-			//------------------------------------------------------------
+			
+
 			mhome = ex.File("/home")
 			musers = mhome.get_folders
-			for user in musers 																				
+
+			for user in musers 	
+
 				bankfile = ex.File( "/home/" + user.name + "/Config/Bank.txt") 
+
 				if not bankfile == null then
 					bankfilecontent = bankfile.get_content
+
 					print (bankfile.path + " : " + bankfilecontent) 
+
 					splitted = bankfilecontent.split(":")
+
 					if crypto then 							
-						m0n3y = crypto.decipher(splitted[1])
-						print (m0n3y) 		
-					else
+						money = crypto.decipher(splitted[1])
+						print(money) 		
 					end if
+
 				end if
 			end for
-			//------------------------------------------------------------
+
 		end if
 		
 		if typeof(ex) == "shell" then
@@ -234,9 +284,17 @@ system_shell = function()
 		print("		decipher [file] -> Fancy version of the decipher tool\n")
 		print("		rshell_interface -> Fantom's rshell interface")
 		print("		<i>More soon..</i>\n")
+
+        print("\n<color=green>			Other Commands.</color>\n")
+
+        print("     clear -> Clears the screen")
 		
 		
 	end if
+
+    if args[0] == "clear" then
+        clear_screen
+    end if
 	
 	if args[0] == "rshell_interface" then
 		victims = mx.rshell_server
@@ -255,20 +313,8 @@ system_shell = function()
 	
 	if args[0] == "decipher" then
 		
-		filename = args[1]
-		file = get_shell.host_computer.File(filename)
-		if not file == null then
-			
-			logins = file.get_content.split("\n")
-			for login in logins
-				info = login.split(":")
-				accnum = info[0]
-				hash = info[1]
-				got = crypto.decipher(accnum,hash)
-				print(accnum+" -> "+got)
-			end for
-			
-		end if
+		pass = args[1]
+		print(crypto.decipher(pass))
 		
 	end if
 	
@@ -304,20 +350,10 @@ end function
 
 
 menu = function()
-	passwordinput = ""
-	while(passwordinput != fantompassword)
-     	passwordinput = user_input("\n<color=green>Password: </color> ")
-		
-		if not passwordinput == fantompassword then
-		print("Wrong Password. Join our Discord for the Sourcecode: dkaMDj8c6b")
-		print("Or try again")
-		print(" ")
-		justwaiting = user_input("Press Enter to try again") 
-		end if
-	end while
-	
+    system_message("You can also type 'exit' to close Fantom.")
 	target = user_input("\n<color=green>Target IP/DOMAIN: </color> ")
 	if target == "shell" then system_shell end if
+    if target == "exit" then exit()
 	
 	target_router = get_router(target)
 	target_domain = nslookup(target)
@@ -329,7 +365,6 @@ menu = function()
 	
 	
 	if target_router == null then
-		
 		menu
 	end if
 	
@@ -352,6 +387,15 @@ menu = function()
 		
 	end for
 	
+
+    print("\n<color=green>			Firewall information</color>")
+    for rule in target_router.firewall_rules
+        print(rule)
+    end for
+    if target_router.firewall_rules.len == 0 then
+        print("No firewall rules.")
+    end if
+
 	print("\n<color=green>			WHOIS information</color>")
 	print(whois(target_router.public_ip)+"\n")
 	
@@ -381,11 +425,18 @@ menu = function()
 			print("		hack [port] -> Have Fantom do the hacking for you")
 			print("		routerhack [lan] -> Fantom will hack this lan address through the router")
 			
+            print("\n<color=green>			Other Commands.</color>\n")
+            print("		clear -> Clears the screen")
 			
 			print("\n	<i>More soon..</i>")
 			
 		end if
 		
+        if args[0] == "clear" then
+            clear_screen
+        end if
+
+
 		if args[0] == "sniffer" then
 			mx.sniffer
 		end if
@@ -407,7 +458,7 @@ menu = function()
 			for mail in got
 				print(mail)
 			end for
-			
+            
 		end if
 		
 		if args[0] == "wifi" then
