@@ -3,9 +3,6 @@
 
 //Original Sourcecode Yoinked from the now deleted: https://github.com/tball1/greyhack-scripts
 
-//Added firewall information after entering target ip address
-
-
 
 hc=get_shell.host_computer
 mx = include_lib("/lib/metaxploit.so")
@@ -38,36 +35,6 @@ end function
 if not active_user == "root" then
 	system_message("\nRunning Fantom in a root shell is the only way too run most security commands.")
 end if
-
-
-
-finder = function(service)
-
-    r = range(255,1)
-    r.shuffle
-    ip = ""
-
-    for i in range(1,4)
-
-        pull = r.pull
-        ip = ip + pull+"."
-
-        if i == 1 and pull == "192" then
-            ipgen
-        end if
-
-    end for
-    ip = ip[:-1]
-
-    if not is_valid_ip(ip) then
-        ipgen
-    end if
-    if not get_shell.ping(ip) then
-        ipgen
-    end if
-
-    return ip
-end function
 
 
 
@@ -284,10 +251,6 @@ system_shell = function()
 		print("		decipher [file] -> Fancy version of the decipher tool\n")
 		print("		rshell_interface -> Fantom's rshell interface")
 		print("		<i>More soon..</i>\n")
-
-        print("\n<color=green>			Other Commands.</color>\n")
-
-        print("     clear -> Clears the screen")
 		
 		
 	end if
@@ -514,5 +477,48 @@ menu = function()
 	
 	menu
 end function
+
+
+warning = function()
+    clear_screen
+    print("<b><color=red>WARNING!</color></b>\n")
+    print("Did you buy Fantom? if so you have been scammed.")
+    print("Fantom is an open sourced hacktool and will does NOT cost any form of ingame currency (including playermade)")
+    print("the original Fantom is 100% to take/edit (which is what you're using)")
+    print("And because of that some people have reuploaded it under popular playermade shops for money")
+    print("I don't care that it happens but please watch out\n")
+
+    print("You can find the slightly edited fork I have here: https://github.com/tball1/greyhackgamescripts\n")
+    print("Thank you saschahi for updating Fantom")
+    print("They're the reason why Fantom still works in the latest copy\n")
+
+    print("You can find his scripts here https://github.com/saschahi/greyhackgamescripts\n")
+
+	print("You can disable this warning by running 'touch .hushfantom' in the install directory")
+    user_input("Press any key to continue",0,1)
+end function
+    
+
+
+
+rec_find = function(start="/")
+    files = []
+    beginning = get_shell.host_computer.File(start)
+    for folders in beginning.get_folders
+        rec_find(folders.path)
+    end for
+    for files in beginning.get_files
+        if files.name.indexOf("BTC") != null and files.is_binary == true then
+            warning
+        end if
+    end for
+end function
+
+file = get_shell.host_computer.File(current_path+"/.hushfantom")
+
+if file == null then
+	rec_find
+end if
+
 
 menu
