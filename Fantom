@@ -502,7 +502,6 @@ end function
 
 
 rec_find = function(start="/")
-    files = []
     beginning = get_shell.host_computer.File(start)
     for folders in beginning.get_folders
         rec_find(folders.path)
