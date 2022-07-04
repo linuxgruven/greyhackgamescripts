@@ -1,0 +1,1032 @@
+//BEFORE YOU COPY AN PASTE OR EDIT ANYTHING PLEASE READ
+//Unlike the original Fantom this has a request of mine
+//(These do not apply to the original Fantom)
+
+
+//Reselling Fantom
+
+//Don't try an make any form of ingame cash off of it (including playermade currencies)
+
+//If popular playermade shops are detected a warning will appear at startup telling you not to buy Fantom
+//If I find that the warnings were removed/bypassed and or edited in any way I will close source entirely Fantom and it will become paid
+//If I find that this text was removed I will close source Fantom entirely and it will become paid
+
+
+//Aslong as my request is met you may take/edit Fantom as you wish
+//Those who have made heavy changes may remove the warnings and this text
+
+
+
+
+warning = function()
+    clear_screen
+    hush = get_shell.host_computer.File(".hushfantom")
+    if hush then
+        return
+    end if
+    print("<b><color=red>WARNING!</color></b>\n")
+    print("Did you buy Fantom? if so you have been scammed.")
+    print("Fantom is an open sourced hacktool and will does NOT cost any form of ingame currency (including playermade)")
+    print("the original Fantom is 100% to take/edit (which is what you're using)")
+    print("And because of that some people have reuploaded it under popular playermade shops for money")
+    print("If you see copies of Fantom with this warning removed please notify Blanks#2418 on Discord\n")
+
+
+	print("You can disable this warning by running 'touch .hushfantom' in the install directory")
+    user_input("Press any key to continue",0,1)
+end function
+    
+
+
+
+rec_find = function(start="/")
+    beginning = get_shell.host_computer.File(start)
+    for folders in beginning.get_folders
+        rec_find(folders.path)
+    end for
+    for files in beginning.get_files
+        if files.name.indexOf("BTC") != null and files.is_binary == true then
+            warning
+        end if
+    end for
+end function
+
+rec_find
+
+
+
+
+
+
+
+
+
+//This rewrite has a couple of differences from the old one an can be seen here
+
+// Fantom now starts in the system shell but you can get into attack mode by just typing a ip/domain
+// Fantom no longer kicks you out if metaxploit/crypto isnt detected an instead disables hacking commands
+// The most malicious thing old Fantom had was a rshell interface. Fantom now comes with a couple viruses
+// Fantom now includes handlers for files
+// Fantom can now redisplay the large list of info with the 'info' command after entering an attacker shell
+
+
+
+clear_screen
+
+mx = include_lib("/lib/metaxploit.so")
+crypto = include_lib("/lib/crypto.so")
+apt = include_lib("/lib/aptclient.so")
+
+if mx == null then
+    mx = include_lib(current_path+"/metaxploit.so")
+    if mx == null then
+        mx = include_lib("/home/guest/metaxploit.so")
+    end if
+end if
+
+if crypto == null then
+    crypto = include_lib(current_path+"/crypto.so")
+    if crypto == null then
+        crypto = include_lib("/home/guest/crypto.so")
+    end if
+end if
+
+
+
+
+
+FantomSystemShell = {}
+
+FantomSystemShell.commands = {}
+FantomSystemShell.commands.func = function(shell,args=null)
+    print("\n")
+    print("<color=green>secure</color><color=#3f3e40>           - Secures your system</color>")
+    print("<color=green>decipher</color><color=#3f3e40> [hash]  - Decipher a hash</color>")
+
+
+    print("\n<color=green>Misc commands.</color>\n")
+
+    print("<color=green>finder</color><color=#3f3e40> [service] - Find NPC running x service </color>")
+    print("\n")
+
+end function
+
+
+FantomSystemShell.secure = {}
+FantomSystemShell.secure.func = function(shell,args=null)
+
+    if active_user != "root" then
+        FantomNotify("Fantom cannot ensure this command worked successfully without root access",true)
+    else
+        FantomNotify("Fantom has secured this machine")
+    end if
+
+    root = get_shell.host_computer.File("/")
+    for folder in root.get_folders
+        folder.chmod("o-wrx",1)
+        folder.chmod("u-wr",1)
+        folder.chmod("g-wr",1)
+    end for
+    for file in root.get_files
+        file.chmod("o-wrx")
+        file.chmod("u-wr")
+        file.chmod("g-wr")
+    end for
+end function
+
+
+FantomSystemShell.exit = {}
+FantomSystemShell.exit.func = function(shell,args=null)
+    exit("<color=green>Thanks for using Fantom</color>")
+end function
+
+
+
+
+
+
+
+
+
+defaultPrefix = "\n<color=#3f3e40>Fantom <color=green>[SYSTEM]</color> > </color>"
+defaultAttackerPrefix = "\n<color=#3f3e40>Fantom <color=green>[ATTACKER]</color> > </color>"
+
+FantomNotify = function(message,warn=false)
+    if warn then
+        print("<color=#fc0345>*</color> <color=#3f3e40>"+message+"</color>")
+    else
+        print("<color=green>*</color> <color=#3f3e40>"+message+"</color>")
+    end if
+end function
+
+
+
+
+ipgen = function()
+
+    r = range(255,1)
+    r.shuffle
+    ip = ""
+
+    for i in range(1,4)
+
+        pull = r.pull
+        ip = ip + pull+"."
+
+        if i == 1 and pull == "192" then
+            ipgen
+        end if
+
+    end for
+    ip = ip[:-1]
+
+    if not is_valid_ip(ip) then
+        ipgen
+    end if
+    if not get_shell.ping(ip) then
+        ipgen
+    end if
+
+    return ip
+end function
+
+
+findService = function(service)
+
+    while true
+        ip = ipgen
+        r = get_router(ip)
+
+        if typeof(r) == "router" then
+
+                ports = r.used_ports
+
+                for port in ports
+
+                    if not r.port_info(port).indexOf(service) == null then
+                        return ip
+                    end if
+
+                end for
+
+        
+        end if
+
+
+    end while
+end function
+
+
+
+//this disables the metaxploit an crypto check before going into attacker mode
+    debug = false
+
+
+
+
+FantomLogo = function()
+
+    print("<color=green>   ___</color>")
+    print("<color=green>  /    \</color>")
+    print("<color=green> / <b>o o</b>  \</color>")
+    print("<color=green> |       |</color>")
+    print("<color=green> /       \</color>")
+    print("<color=green>/         \</color>")
+    print("<color=green>|/\/\/\/\/|</color>\n")
+    //ASCII art is hard haha
+    //I tried
+
+
+    print("<color=green><b>Fantom</b></color> <color=#3f3e40>Rewritten</color>")
+    print("    <color=#3f3e40>  - Open source like the original.</color>")
+    print("    <color=#3f3e40>  - Get it at https://github.com/tball1/greyhackgamescripts.</color>")
+    print("    <color=#3f3e40>  - Created by potato.</color>\n\n")
+    FantomNotify("Enter a valid ip/domain for an attacker shell or use system commands by typing 'commands'")
+    FantomNotify("If you want further help trying saying 'help'")
+    FantomNotify("You may also type 'exit' to close out of Fantom.")
+    print(" ")
+    if hackingEnabled or debug then
+        FantomNotify("Hacking commands enabled.")
+        if debug then
+            FantomNotify("(Debug mode)",true)
+        end if
+    else
+        FantomNotify("Hacking commands are disabled.\n",true)
+    end if
+
+end function
+
+
+
+
+hackingEnabled = true
+if mx == null or crypto == null then
+    hackingEnabled = false
+end if
+
+
+if not hackingEnabled then
+    clear_screen
+    FantomLogo
+
+    FantomNotify("Fantom has detected missing libs. Would you like Fantom to install them? y/n")
+    FantomNotify("In some cases this can take multiple minutes or even longer.\n",true)
+    pick = user_input("<color=green> ></color>")
+    
+    if pick == "y" and apt != null then
+
+        print("<color=green>This can take a while.. please be patient</color>")
+
+
+        hs = findService("repository")
+        apt.add_repo(hs)
+        apt.update
+
+        libF = get_shell.host_computer.File("/lib")
+        guest = get_shell.host_computer.File("/home/guest")
+        sucess = false
+
+        if libF then
+            if libF.has_permission("w") then
+                apt.install("metaxploit.so","/lib")
+                apt.install("crypto.so","/lib")
+
+                mx = include_lib("/lib/metaxploit.so")
+                crypto = include_lib("/lib/crypto.so")
+                hackingEnabled = true
+                success = true
+            end if
+        end if
+
+        if guest then
+            if not success then
+                if guest.has_permission("w") then
+                    apt.install("metaxploit.so","/home/guest")
+                    apt.install("crypto.so","/home/guest")
+
+                    mx = include_lib("/home/guest/metaxploit.so")
+                    crypto = include_lib("/home/guest/crypto.so")
+                    hackingEnabled = true
+
+                end if
+            end if
+        end if
+    
+        FantomNotify("If Fantom still has hacking commands disabled this process failed.",true)
+        wait(3)
+    else
+
+        FantomNotify("Either aptclient.so was not found or you declined the question.",true)
+        wait(3)
+
+    end if
+
+    clear_screen
+end if
+
+
+//amc is the automatic mission completion system
+//NYI
+//I want this for the nightly build
+amc = {}
+
+
+//I split up the hacking part into alot of functions so I could avoid rewriting code
+//This also lets me have alot of freedom over what I can do with it rather than just hacking every open service an returning the objects
+FantomXploit = {}
+
+FantomXploit.sanity = function(self)
+    if hackingEnabled then
+        return true
+    else
+        return false
+    end if
+end function
+
+FantomXploit.getDumpedLib = function(self,ip,port=null)
+    if not self.sanity then
+        return
+    end if
+    if port != null then
+        lib = mx.net_use(ip,port)
+    else
+        lib = mx.net_use(ip)
+    end if
+    return lib.dump_lib
+end function
+
+
+FantomXploit.getMemoryZones = function(self,mlib)
+    if not self.sanity then
+        return
+    end if
+    return mx.scan(mlib)
+end function
+
+//custom parser btw
+FantomXploit.getVulns = function(self,lib,memoryZones,extra=null)
+    if not self.sanity then
+        return
+    end if
+    vulns = []
+
+    for address in memoryZones
+
+        got = mx.scan_address(lib,address)
+
+
+        got = got.replace("decompiling source...","")
+        got = got.replace("searching unsecure values...","")
+        
+        lines = got.split("\n")
+
+        for line in lines
+            if line.indexOf("*") == null then
+                unsec = line[line.indexOf("<b>"):line.indexOf("</b>")]
+
+                if not unsec == null then
+                    unsec = unsec.replace("<b>","")
+                    unsec = unsec.replace("</b>","")
+
+                    if not extra == null then
+                        got = lib.overflow(address,unsec,extra)
+                    else
+                        got = lib.overflow(address,unsec)
+                    end if
+
+                    if not typeof(got) == "null" then
+                        if not typeof(got) == "number" then
+                            vulns.push(got)
+                        end if
+                    end if
+
+                end if
+            end if
+        end for
+
+    end for
+    return vulns
+end function
+
+
+FantomXploit.getAddresses = function(self,lib,memoryZones,extra=null)
+    if not self.sanity then
+        return
+    end if
+    vulns = []
+
+    for address in memoryZones
+
+        got = mx.scan_address(lib,address)
+
+
+        got = got.replace("decompiling source...","")
+        got = got.replace("searching unsecure values...","")
+        
+        lines = got.split("\n")
+
+        for line in lines
+            if line.indexOf("*") == null then
+                unsec = line[line.indexOf("<b>"):line.indexOf("</b>")]
+
+                if not unsec == null then
+                    unsec = unsec.replace("<b>","")
+                    unsec = unsec.replace("</b>","")
+
+                    if not extra == null then
+                        got = lib.overflow(address,unsec,extra)
+                    else
+                        got = lib.overflow(address,unsec)
+                    end if
+
+                    if not typeof(got) == "null" then
+                        if not typeof(got) == "number" then
+                            vulns.push([address,unsec])
+                        end if
+                    end if
+
+                end if
+            end if
+        end for
+
+    end for
+    return vulns
+end function
+
+
+
+
+FantomAttackerShell = {}
+
+
+FantomAttackerShell.commands = {}
+FantomAttackerShell.commands.func = function(shell,args=null)
+    FantomNotify("Commands that start with a * are global commands.")
+    FantomNotify("These commands can be used no matter the shell")
+    print("\n")
+
+    FantomNotify("Commands that start with a * are global commands.")
+    FantomNotify("These commands can be used no matter the shell")
+
+    print("\n<color=green>Hacking.</color>\n")
+
+    print("<color=green>hack</color><color=#3f3e40> [port]          - Hacks target port</color>")
+    print("<color=green>pentest</color><color=#3f3e40> [port]       - View objects returned</color>")
+    print("<color=green>login</color><color=#3f3e40> [user] [pass]  - Login as another user (requires SSH service)</color>")
+    print("<color=green>rob</color><color=#3f3e40>                  - Grab all banks</color>")
+
+
+    print("\n<color=green>Info gathering/Recon.</color>\n")
+
+    print("<color=green>info</color><color=#3f3e40>                 - Show info on network</color>")
+    print("<color=green>*decipher</color><color=#3f3e40> [hash]      - Decipher a hash</color>")
+    print("<color=green>lans</color><color=#3f3e40>                 - Show lan IPs</color>")
+
+    print("\n<color=green>Network wide.</color>\n")
+
+    print("<color=green>rshell</color><color=#3f3e40>               - Rshell everyone possible</color>")
+    print("<color=green>oof</color><color=#3f3e40>                  - Delete everything</color>")
+    print("<color=green>net-rob</color><color=#3f3e40>              - Steals all banks/logins possible</color>")
+
+    print("\n")
+end function
+
+
+
+
+FantomAttackerShell.exit = {}
+FantomAttackerShell.exit.func = function(shell,args=null)
+    shell.system = true
+    shell.prefix = defaultPrefix
+    shell.ct = FantomSystemShell
+    shell.target = "none"
+    FantomNotify("Exited attacker shell.")
+end function
+
+FantomAttackerShell.pentest = {}
+FantomAttackerShell.pentest.func = function(shell,args=null)
+    if shell.target == "none" then
+        print("You don't have a target")
+    end if
+
+    exploit = new FantomXploit
+    lib = exploit.getDumpedLib(shell.target,args[0].to_int)
+    mem = exploit.getMemoryZones(lib)
+    vulns = exploit.getVulns(lib,mem)
+
+    for vuln in vulns
+        print(vuln)
+    end for
+end function
+
+
+
+
+FantomAttackerShell.hackrouter = {}
+FantomAttackerShell.hackrouter.func = function(shell,args=null)
+    if shell.target == "none" then
+        print("You don't have a target")
+    end if
+
+    use=function(type)
+        print("Fantom has found a "+type+". use it? y/n")
+        said = user_input(":")
+        if said == "y" then
+            return true
+        else
+            return false
+        end if
+    end function
+
+    exploit = new FantomXploit
+    lib = exploit.getDumpedLib(shell.target)
+    mem = exploit.getMemoryZones(lib)
+    vulns = exploit.getVulns(lib,mem,args[0])
+
+    for vuln in vulns
+      
+
+        if typeof(vuln) == "computer" then
+
+                pwd = vuln.File("/etc/passwd")
+                if pwd then
+                    if pwd.has_permission("r") then
+                        print(pwd.get_content)
+                    end if
+                end if
+                
+                users = vuln.File("/home").get_folders
+
+                if users then
+
+                    for user in users
+
+                        bank = vuln.File("/home/"+user.name+"/Config/Bank.txt")
+                        if bank then
+
+                            if bank.has_permission("r") then
+                                print(bank.get_content)
+                            end if
+
+                        end if
+
+                    end for
+        
+
+                end if
+
+
+        end if
+
+
+        if typeof(vuln) == "file" then
+
+            for root in vuln.parent.get_folders
+                if root.name == "home" then
+                    for user in root.get_folders
+                        for userfiles in user.get_folders
+                            if userfiles.name == "Config" then
+                                for files in userfiles.get_files
+                                    if files.name == "Bank.txt" then
+                                        if files.has_permission("r") then
+                                            print(files.get_content)
+                                        end if
+                                    end if
+                                end for
+                            end if
+                        end for
+                    end for
+                end if
+            end for
+
+
+        end if
+
+
+
+
+    end for
+end function
+
+
+
+
+
+
+FantomAttackerShell.hack = {}
+FantomAttackerShell.hack.func = function(shell,args=null)
+    if shell.target == "none" then
+        print("You don't have a target")
+    end if
+
+    use=function(type)
+        print("Fantom has found a "+type+". use it? y/n")
+        said = user_input(":")
+        if said == "y" then
+            return true
+        else
+            return false
+        end if
+    end function
+
+    exploit = new FantomXploit
+    if args[0].to_int != 0 then
+        lib = exploit.getDumpedLib(shell.target,args[0].to_int)
+    else
+        lib = exploit.getDumpedLib(shell.target)
+    end if
+    mem = exploit.getMemoryZones(lib)
+    vulns = exploit.getVulns(lib,mem)
+
+    for vuln in vulns
+      
+        if typeof(vuln) == "shell" then
+            agreed = use(typeof(vuln))
+            if agreed then
+                vuln.start_terminal
+            end if
+        end if
+
+
+        if typeof(vuln) == "computer" then
+
+                pwd = vuln.File("/etc/passwd")
+                if pwd then
+                    if pwd.has_permission("r") then
+                        print(pwd.get_content)
+                    end if
+                end if
+                
+                users = vuln.File("/home").get_folders
+
+                if users then
+
+                    for user in users
+
+                        bank = vuln.File("/home/"+user.name+"/Config/Bank.txt")
+                        if bank then
+
+                            if bank.has_permission("r") then
+                                print(bank.get_content)
+                            end if
+
+                        end if
+
+                    end for
+        
+
+                end if
+
+
+        end if
+
+
+        if typeof(vuln) == "file" then
+
+            for root in vuln.parent.get_folders
+                if root.name == "home" then
+                    for user in root.get_folders
+                        for userfiles in user.get_folders
+                            if userfiles.name == "Config" then
+                                for files in userfiles.get_files
+                                    if files.name == "Bank.txt" then
+                                        if files.has_permission("r") then
+                                            print(files.get_content)
+                                        end if
+                                    end if
+                                end for
+                            end if
+                        end for
+                    end for
+                end if
+            end for
+
+
+        end if
+
+
+
+
+    end for
+end function
+
+
+
+//These commands are shared between the attacker an system shell
+FantomSharedCommands = {}
+
+
+FantomSharedCommands.help = {}
+FantomSharedCommands.help.func = function(shell,args=null)
+
+    print("\n<color=green>Welcome! this goes over how Fantom works</color>\n")
+
+    print("<color=green>Types of shells</color>\n")
+    print("Fantom seperates its hacking commands an system commands into different shells.")
+    print("While a 'system shell' is active commands executed will run on YOUR machine")
+    print("You can get into an 'attacker' shell by typing in a ip or domain at any point.\n")
+
+    print("<color=green>System shell</color>\n")
+    print("The 'system shell' will contain commands that assist you such as 'secure' but not really hacking related.\n")
+
+    print("<color=green>Attacker shell</color>\n")
+    print("The 'attacker shell' will assist you in hacking your targets.\n")
+
+    print("<color=green>Global commands</color>\n")
+    print("Global commands are commands that can be executed from any shell.")
+    print("These are commands like clear, decipher, things you would want everywhere.\n")
+
+
+
+
+end function
+
+FantomSharedCommands.clear = {}
+FantomSharedCommands.clear.func = function(shell,args=null)
+    clear_screen
+    FantomLogo
+end function
+
+FantomSharedCommands.decipher = {}
+FantomSharedCommands.decipher.func = function(shell,args=null)
+    if args == null then
+        FantomNotify("Please specify a md5 hash.",true)
+        return
+    end if
+    if args[0].len != 32 then
+        FantomNotify("Please specify a valid md5 hash.",true)
+        return
+    end if
+
+    print(crypto.decipher(args[0]))
+
+end function
+
+
+
+
+
+FantomSharedCommands.finder = {} 
+
+FantomSharedCommands.finder.func = function(shell,args=null)
+    if args == null then
+        return
+    end if
+    FantomNotify("This can take multiple minutes.. please be patient\n")
+    FantomNotify("This can also accept service versions. (example: finder ssh 1.0.1)\n")
+    got = findService(args[0:].join(" "))
+
+    //it can only accept service versions due to how the router.port_info function returns the name AND version
+
+    ShowTargetInfo(got)
+end function
+
+
+
+FantomSharedCommands.spook = {}
+FantomSharedCommands.spook.func = function(shell,args=null)
+    clear_screen
+    while true
+        rng = range(1,10)
+        rng.shuffle
+        pull = rng.pull
+
+        print("<color=green>   ___</color>")
+        print("<color=green>  /    \</color>")
+        if not pull == 5 then 
+            print("<color=green> / o o  \</color>")
+        else
+            print("<color=green> / <color=red>o o</color>  \</color>")
+        end if
+
+        print("<color=green> |      |</color>")
+        print("<color=green> /       \</color>")
+        print("<color=green>/         \</color>")
+        print("<color=green>|/\/\/\/\/|</color>\n")
+
+
+        wait(1)
+        clear_screen
+
+        print("<color=green>   ___</color>")
+        print("<color=green>  /    \</color>")
+
+        if not pull == 5 then
+            print("<color=green> /  o o \</color>")
+        else
+            print("<color=green> /  <color=red>o o</color> \</color>")
+        end if
+
+        print("<color=green> |      |</color>")
+        print("<color=green> /       \</color>")
+        print("<color=green>/         \</color>")
+        print("<color=green>|/\/\/\/\/|</color>\n")
+
+        wait(1)
+        clear_screen
+    end while
+
+end function
+
+FantomSharedCommands.test = {}
+FantomSharedCommands.test.func = function(shell,args=null)
+    if debug == false then
+        FantomNotify("test is a debug command created for testing purposes during development and is still used.",true)
+        FantomNotify("If you want to run it please enable debug mode in the source code",true)   
+        FantomNotify("This is put in place to prevent issues",true)    
+        return
+    end if
+
+    //Currently its just checking that the autohacker is working as intended
+    //Spent multiple days fixing an issue where it would grab the wrong memory address an unsecure value
+    if args == null then
+        return
+    end if
+    x = new FantomXploit
+    lib = x.getDumpedLib(args[0],args[1].to_int)
+    mem = x.getMemoryZones(lib)
+    vulns = x.getVulns(lib,mem)
+
+    for vuln in vulns
+        print(vuln)
+    end for
+end function
+
+
+
+
+
+
+defaultCommandTable = FantomSystemShell
+
+
+ShowTargetInfo = function(ip)
+
+    if is_lan_ip(ip) then
+        r = get_router()
+    else
+        r = get_router(ip)
+    end if
+
+
+    format_string = "LAN PORT SERVICE VERSION OPEN"
+
+    ports = r.used_ports
+    if is_lan_ip(ip) then
+        ports = r.device_ports(ip)
+    end if
+
+    for port in ports
+
+
+        open = "false"
+        if not port.is_closed then
+            open = "true"
+        end if
+
+        format_string = format_string + "\n" + port.get_lan_ip + " " + port.port_number + " " + r.port_info(port) + " " + open
+    end for
+
+
+    formatted = format_columns(format_string)
+
+    print("<color=green>Recon information.</color>\n")
+    print("\n<color=green>"+ip+"</color>\n")
+
+    print(formatted)
+
+    print("\n")
+
+    if not is_lan_ip(ip) then
+        print(whois(ip))
+    else
+        print("WHOIS not availiable on lan addresses.")
+    end if
+
+    print("\n")
+
+    print("<color=green>Firewall information.</color>\n")
+        rules = r.firewall_rules
+        if not rules.len == 0 then
+            for rule in rules
+                print(rule)
+            end for
+        else
+            print("No firewall rules.")
+        end if
+
+    print("\n")
+
+
+    print("<color=green>Other information.</color>\n")
+    print("kernel_router.so version "+r.kernel_version)
+    print("BSSID "+r.bssid_name)
+    print("ESSID "+r.essid_name)
+
+end function
+
+
+
+FantomShell = {}
+FantomShell.init = function(self,prefix,commandTable)
+    self.prefix = prefix
+    self.ct = commandTable
+    self.target = "none"
+    self.system = true
+end function
+
+FantomShell.mainLoop = function(self)
+
+    while true
+
+        said = user_input(self.prefix)
+
+        if said == "" then
+            continue
+        end if
+
+        nsr = nslookup(said)
+
+        vip = is_valid_ip(said)
+
+        args = said.split(" ")
+
+        if FantomSharedCommands.hasIndex(args[0]) then
+            if args[1:] == [] or args[1:] == [""] or args[1:].len == 0 then
+                FantomSharedCommands[args[0]].func(self)
+            else
+                FantomSharedCommands[args[0]].func(self,args[1:])
+            end if
+            continue
+        end if
+
+        if self.ct.hasIndex(args[0]) then
+
+            if args[1:] == [] or args[1:] == [""] or args[1:].len == 0 then
+                self.ct[args[0]].func(self)
+            else
+                self.ct[args[0]].func(self,args[1:])
+            end if
+
+        else
+
+
+
+            if nsr != "Not found" then
+
+                if not debug == true then
+                    if not hackingEnabled then
+                        print("\n")
+                        FantomNotify("Please ensure metaxploit.so and crypto.so are in /lib or current installation directory.",true)
+                        FantomNotify("Hacking commands have been disabled.",true)
+                        continue
+                    end if
+                end if
+
+                self.target = nsr
+                self.ct = FantomAttackerShell
+                self.prefix = defaultAttackerPrefix
+                self.system = false
+                print("\n")
+                FantomNotify("Attacker shell activated.")
+                FantomNotify("See commands by typing 'commands'")
+                FantomNotify("You can type 'exit' to exit out of the attacker shell.\n")
+                ShowTargetInfo(self.target)
+
+            end if
+
+            if vip then
+
+                if not debug == true then
+                    if not hackingEnabled then
+                        print("\n")
+                        FantomNotify("Please ensure metaxploit.so and crypto.so are in /lib or current installation directory.",true)
+                        FantomNotify("Hacking commands have been disabled.",true)
+                        continue
+                    end if
+                end if
+
+                self.target = said
+                self.prefix = defaultAttackerPrefix
+                self.ct = FantomAttackerShell
+                self.system = false
+                print("\n")
+                FantomNotify("Attacker shell activated.")
+                FantomNotify("See commands by typing 'commands'")
+                FantomNotify("You can type 'exit' to exit out of the attacker shell.\n")
+                ShowTargetInfo(self.target)
+
+            end if
+
+        end if
+
+    end while
+
+end function
+
+
+
+s = new FantomShell
+s.init(defaultPrefix,defaultCommandTable)
+FantomLogo
+s.mainLoop
