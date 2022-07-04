@@ -27,7 +27,7 @@ warning = function()
     print("<b><color=red>WARNING!</color></b>\n")
     print("Did you buy Fantom? if so you have been scammed.")
     print("Fantom is an open sourced hacktool and will does NOT cost any form of ingame currency (including playermade)")
-    print("the original Fantom is 100% to take/edit (which is what you're using)")
+    print("Fantom rewritten is %90 to take/edit (which is what you're using)")
     print("And because of that some people have reuploaded it under popular playermade shops for money")
     print("If you see copies of Fantom with this warning removed please notify Blanks#2418 on Discord\n")
 
