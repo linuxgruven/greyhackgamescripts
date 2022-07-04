@@ -18,6 +18,10 @@
 //Those who have made heavy changes may remove the warnings and this text
 
 
+//update log:
+//fantom now contains a local escalation command called "selfesc" (global command)
+//cleaned up some logic that could potentially cause a script crash
+
 
 
 //TODO: This warning can be rather irritating when moving Fantom to a hacked machine
@@ -64,17 +68,6 @@ rec_find
 
 
 
-
-//This rewrite has a couple of differences from the old one an can be seen here
-
-// Fantom now starts in the system shell but you can get into attack mode by just typing a ip/domain
-// Fantom no longer kicks you out if metaxploit/crypto isnt detected an instead disables hacking commands
-// The most malicious thing old Fantom had was a rshell interface. Fantom now comes with a couple viruses
-// Fantom now includes handlers for files
-// Fantom can now redisplay the large list of info with the 'info' command after entering an attacker shell
-
-
-
 clear_screen
 
 mx = include_lib("/lib/metaxploit.so")
@@ -104,8 +97,9 @@ FantomSystemShell = {}
 FantomSystemShell.commands = {}
 FantomSystemShell.commands.func = function(shell,args=null)
     print("\n")
-    print("<color=green>secure</color><color=#3f3e40>           - Secures your system</color>")
-    print("<color=green>decipher</color><color=#3f3e40> [hash]  - Decipher a hash</color>")
+    print("<color=green>secure</color><color=#3f3e40>              - Secures your system</color>")
+    print("<color=green>decipher</color><color=#3f3e40> [hash]     - Decipher a hash</color>")
+    print("<color=green>selfesc</color><color=#3f3e40> [opt:extra] - local escalation</color>")
 
 
     print("\n<color=green>Misc commands.</color>\n")
@@ -491,7 +485,7 @@ FantomAttackerShell.commands.func = function(shell,args=null)
     print("<color=green>pentest</color><color=#3f3e40> [port]       - View objects returned</color>")
     print("<color=green>login</color><color=#3f3e40> [user] [pass]  - Login as another user (requires SSH service)</color>")
     print("<color=green>rob</color><color=#3f3e40>                  - Grab all banks</color>")
-
+    print("<color=green>selfesc</color><color=#3f3e40> [opt:extra] - local escalation</color>")
 
     print("\n<color=green>Info gathering/Recon.</color>\n")
 
@@ -655,7 +649,11 @@ FantomAttackerShell.hack.func = function(shell,args=null)
         lib = exploit.getDumpedLib(shell.target)
     end if
     mem = exploit.getMemoryZones(lib)
-    vulns = exploit.getVulns(lib,mem)
+    if not args.hasIndex(1) then
+        vulns = exploit.getVulns(lib,mem)
+    else
+        vulns = exploit.getVulns(lib,mem,args[1])
+    end if
 
     for vuln in vulns
       
@@ -771,7 +769,8 @@ FantomSharedCommands.selfesc.func = function(shell,args=null)
             memzones = exploit.getMemoryZones(mlib)
             if args == null then
                 vulns = exploit.getVulns(mlib,memzones)
-            else
+            end if
+            if args.hasIndex(1) then
                 vulns = exploit.getVulns(mlib,memzones,args[0])
             end if
         end for
