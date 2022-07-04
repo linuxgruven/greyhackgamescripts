@@ -20,6 +20,8 @@
 
 
 
+//TODO: This warning can be rather irritating when moving Fantom to a hacked machine
+//Implement a transfer command
 warning = function()
     clear_screen
     hush = get_shell.host_computer.File(".hushfantom")
@@ -29,7 +31,7 @@ warning = function()
     print("<b><color=red>WARNING!</color></b>\n")
     print("Did you buy Fantom? if so you have been scammed.")
     print("Fantom is an open sourced hacktool and will does NOT cost any form of ingame currency (including playermade)")
-    print("Fantom rewritten is %90 to take/edit (which is what you're using)")
+    print("the original Fantom is 100% to take/edit (which is what you're using)")
     print("And because of that some people have reuploaded it under popular playermade shops for money")
     print("If you see copies of Fantom with this warning removed please notify Blanks#2418 on Discord\n")
 
@@ -345,6 +347,19 @@ FantomXploit.sanity = function(self)
     end if
 end function
 
+//for the self escalation command
+FantomXploit.loadLib = function(self,file)
+    if not self.sanity then
+        return
+    end if
+    s = get_shell.host_computer.File(file)
+    if s then
+        return mx.load(file)
+    else
+        return null
+    end if
+end function
+
 FantomXploit.getDumpedLib = function(self,ip,port=null)
     if not self.sanity then
         return
@@ -615,10 +630,12 @@ end function
 
 
 
+
 FantomAttackerShell.hack = {}
 FantomAttackerShell.hack.func = function(shell,args=null)
     if shell.target == "none" then
         print("You don't have a target")
+        return
     end if
 
     use=function(type)
@@ -742,6 +759,26 @@ FantomSharedCommands.help.func = function(shell,args=null)
 
 
 end function
+
+
+FantomSharedCommands.selfesc = {}
+FantomSharedCommands.selfesc.func = function(shell,args=null)
+    exploit = new FantomXploit
+    libs = get_shell.host_computer.File("/lib")
+    if libs then
+        for libFile in libs.get_files
+            mlib = exploit.loadLib("/lib/"+libFile.name)
+            memzones = exploit.getMemoryZones(mlib)
+            if args == null then
+                vulns = exploit.getVulns(mlib,memzones)
+            else
+                vulns = exploit.getVulns(mlib,memzones,args[0])
+            end if
+        end for
+    end if
+end function
+
+
 
 FantomSharedCommands.clear = {}
 FantomSharedCommands.clear.func = function(shell,args=null)
