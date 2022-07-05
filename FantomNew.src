@@ -8,10 +8,10 @@
 //Don't try an make any form of ingame cash off of it (including playermade currencies)
 
 //If popular playermade shops are detected a warning will appear at startup telling you not to buy Fantom
-//If I find that the warnings were removed/bypassed and or edited in any way I will close source entirely Fantom and it will become paid
+//If I find that the warnings were removed/bypassed and or edited in any way I will close source Fantom entirely and it will become paid
 //If I find that this text was removed I will close source Fantom entirely and it will become paid
 
-//atleast upload it for as cheap as possible an sell it as a .src file
+//Atleast upload it for as cheap as possible an sell it as a .src file
 
 
 //Aslong as my request is met you may take/edit Fantom as you wish
@@ -19,9 +19,10 @@
 
 
 //update log:
-//fantom now contains a local escalation command called "selfesc" (global command)
-//cleaned up some logic that could potentially cause a script crash
+//added net-rob command simply enter attacker mode an type 'net-rob' to rob everyone on the network
 
+//Currently theres alot of lazily defined logic (if statements) that I am in the process of fixing
+//If theres any command you want fixed sooner just let me know
 
 
 //TODO: This warning can be rather irritating when moving Fantom to a hacked machine
@@ -35,9 +36,9 @@ warning = function()
     print("<b><color=red>WARNING!</color></b>\n")
     print("Did you buy Fantom? if so you have been scammed.")
     print("Fantom is an open sourced hacktool and will does NOT cost any form of ingame currency (including playermade)")
-    print("the original Fantom is 100% to take/edit (which is what you're using)")
+    print("the original Fantom is 99% free to take/edit (which is what you're using)")
     print("And because of that some people have reuploaded it under popular playermade shops for money")
-    print("If you see copies of Fantom with this warning removed please notify Blanks#2418 on Discord\n")
+    print("If you see copies of Fantom rewritten with this warning removed please notify Blanks#2418 on Discord\n")
 
 
 	print("You can disable this warning by running 'touch .hushfantom' in the install directory")
@@ -476,9 +477,6 @@ FantomAttackerShell.commands.func = function(shell,args=null)
     FantomNotify("These commands can be used no matter the shell")
     print("\n")
 
-    FantomNotify("Commands that start with a * are global commands.")
-    FantomNotify("These commands can be used no matter the shell")
-
     print("\n<color=green>Hacking.</color>\n")
 
     print("<color=green>hack</color><color=#3f3e40> [port]          - Hacks target port</color>")
@@ -502,6 +500,152 @@ FantomAttackerShell.commands.func = function(shell,args=null)
     print("\n")
 end function
 
+
+FantomAttackerShell.info = {}
+FantomAttackerShell.info.func = function(shell,args=null)
+    ShowTargetInfo(shell.target)
+end function
+
+//later versions will include router hacks
+FantomAttackerShell["net-rob"] = {}
+FantomAttackerShell["net-rob"].func = function(shell,args=null)
+    FantomNotify("Fantom will crash sometimes when using this.",true)
+    FantomNotify("Grey Hack doesn't like these style of scripts",true)
+    wait(2)
+    exploit = new FantomXploit
+    r = get_router(shell.target)
+
+    if r then
+
+        ports = r.used_ports
+        for port in ports
+
+            if port.is_closed then
+                continue
+            end if
+
+            lib =  exploit.getDumpedLib(shell.target,port.port_number)
+            mem = exploit.getMemoryZones(lib)
+            vulns = exploit.getVulns(lib,mem)
+
+
+            for vuln in vulns
+
+                if typeof(vuln) == "shell" then
+
+                    users = vuln.host_computer.File("/home")
+                    if users then
+
+                        for user in users.get_folders
+                            bank = "/home/"+user.name+"/Config/Bank.txt"
+                            bankFile = vuln.host_computer.File(bank)
+                            if bankFile then
+
+                                if bankFile.has_permission("r") then
+                                    print(bankFile.get_content)
+                                end if
+
+                            end if
+                        end for
+
+                    end if
+
+                end if
+
+
+
+
+                if typeof(vuln) == "computer" then
+
+                    users = vuln.File("/home")
+                    if users then
+
+                        for user in users.get_folders
+                            bank = "/home/"+user.name+"/Config/Bank.txt"
+                            bankFile = vuln.File(bank)
+                            if bankFile then
+
+                                if bankFile.has_permission("r") then
+                                    print(bankFile.get_content)
+                                end if
+
+                            end if
+                        end for
+
+                    end if
+
+                end if
+
+
+
+
+            end for
+
+           
+        end for
+
+
+        lans  = r.devices_lan_ip
+
+        for lan in lans
+            lib =  exploit.getDumpedLib(shell.target)
+            mem = exploit.getMemoryZones(lib)
+            vulns = exploit.getVulns(lib,mem,lan)
+
+            for vuln in vulns
+
+                if typeof(vuln) == "shell" then
+
+                    users = vuln.host_computer.File("/home")
+                    if users then
+
+                        for user in users.get_folders
+                            bank = "/home/"+user.name+"/Config/Bank.txt"
+                            bankFile = vuln.host_computer.File(bank)
+                            if bankFile then
+
+                                if bankFile.has_permission("r") then
+                                    print(bankFile.get_content)
+                                end if
+
+                            end if
+                        end for
+
+                    end if
+
+                end if
+
+
+
+
+                if typeof(vuln) == "computer" then
+
+                    users = vuln.File("/home")
+                    if users then
+
+                        for user in users.get_folders
+                            bank = "/home/"+user.name+"/Config/Bank.txt"
+                            bankFile = vuln.File(bank)
+                            if bankFile then
+
+                                if bankFile.has_permission("r") then
+                                    print(bankFile.get_content)
+                                end if
+
+                            end if
+                        end for
+
+                    end if
+
+                end if
+            end for
+
+        end for
+
+
+    end if
+
+end function
 
 
 
@@ -633,9 +777,6 @@ FantomAttackerShell.hackrouter.func = function(shell,args=null)
 
     end for
 end function
-
-
-
 
 
 
@@ -783,6 +924,11 @@ end function
 
 FantomSharedCommands.selfesc = {}
 FantomSharedCommands.selfesc.func = function(shell,args=null)
+
+    if args == null then
+        args = []
+    end if
+
     exploit = new FantomXploit
     libs = get_shell.host_computer.File("/lib")
     if libs then
@@ -915,8 +1061,7 @@ end function
 
 
 
-
-
+//The commandTable is a map which maps the command name to its function
 defaultCommandTable = FantomSystemShell
 
 
@@ -960,7 +1105,7 @@ ShowTargetInfo = function(ip)
     if not is_lan_ip(ip) then
         print(whois(ip))
     else
-        print("WHOIS not availiable on lan addresses.")
+        print("WHOIS not available on lan addresses.")
     end if
 
     print("\n")
@@ -986,15 +1131,19 @@ ShowTargetInfo = function(ip)
 end function
 
 
-
+//Core of Fantom
+//Would not recommend you touch this without extensive ms/greyscript knowledge
 FantomShell = {}
 FantomShell.init = function(self,prefix,commandTable)
-    self.prefix = prefix
-    self.ct = commandTable
-    self.target = "none"
-    self.system = true
+    self.prefix = prefix //Just the text before our users input
+    self.ct = commandTable //This points to the map which points the command name to its function
+    //NOTE: switching between system/attacker shells is done by modifying this variable
+
+    self.target = "none" //Our target
+    self.system = true //Are we in the system shell?
 end function
 
+//The mainLoop function is responsible for parsing out the users input and executing the given commands
 FantomShell.mainLoop = function(self)
 
     while true
