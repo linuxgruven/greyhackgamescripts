@@ -514,6 +514,21 @@ FantomAttackerShell.exit.func = function(shell,args=null)
     FantomNotify("Exited attacker shell.")
 end function
 
+FantomAttackerShell.sniffer = {}
+FantomAttackerShell.sniffer.func = function(shell,args=null)
+    if args == null then
+    mx.sniffer
+    return
+    end if
+    if args.hasIndex(1) then
+        if args[0] == "true" then
+            mx.sniffer(true)
+        else
+            mx.sniffer(false)
+        end if
+    end if
+end function
+
 FantomAttackerShell.pentest = {}
 FantomAttackerShell.pentest.func = function(shell,args=null)
     if shell.target == "none" then
@@ -631,6 +646,9 @@ FantomAttackerShell.hack.func = function(shell,args=null)
         print("You don't have a target")
         return
     end if
+    if args == null then
+        args = []
+    end if
 
     use=function(type)
         print("Fantom has found a "+type+". use it? y/n")
@@ -643,8 +661,12 @@ FantomAttackerShell.hack.func = function(shell,args=null)
     end function
 
     exploit = new FantomXploit
-    if args[0].to_int != 0 then
-        lib = exploit.getDumpedLib(shell.target,args[0].to_int)
+    if args.hasIndex(0) then
+        if not args[0] == "-" then
+            lib = exploit.getDumpedLib(shell.target,args[0].to_int)
+        else
+            lib = exploit.getDumpedLib(shell.target)
+        end if
     else
         lib = exploit.getDumpedLib(shell.target)
     end if
