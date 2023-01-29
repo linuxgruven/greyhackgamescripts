@@ -7,6 +7,12 @@ Fantom is my abomination of a script for a game called "Grey Hack". I do not car
 Special thanks to the user 'saschahi' for fixing Fantom while I was away
 https://github.com/saschahi/greyhackgamescripts
 
+
+
+Do feel free to open an issue if something breaks or you want to suggest something.
+
+
+
 //update log:
 //added oof (network-wide destroyer)
 
