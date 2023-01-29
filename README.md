@@ -9,14 +9,20 @@ https://github.com/saschahi/greyhackgamescripts
 
 //update log:
 //added oof (network-wide destroyer)
+
 //added processlogger - Notifies you when processes have opened/closed on your machine (rshell finder)
+
 //added ps - Same as /bin/ps but cant be replaced
 
+
 //assuming libs were installed by Fantom you can now update metaxploit at any time with the 'updatemx' command
+
 //Fantom adds the hackshop's repository as an apt source
 
 //rewrote some broken auto hacker stuff
+
 //added 'connectwifi' command (usage: connectwifi [essid] - cracks and connects to specified wifi)
+
 //started work on AMC (automatic mission completion)
 
 
