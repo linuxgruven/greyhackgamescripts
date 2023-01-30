@@ -14,9 +14,11 @@ Do feel free to open an issue if something breaks or you want to suggest somethi
 
 
 update log:
-Stability improvements in some commands (hack, oof)
-Bug fixes in the 'oof' command
-added 'brute' - [port] [password list file] [user] bruteforces a users password (attacker shell)
+ - Stability improvements in some commands (hack, oof)
+
+ - Bug fixes in the 'oof' command
+
+ - added 'brute' - [port] [password list file] [user] bruteforces a users password (attacker shell)
 
 
 
