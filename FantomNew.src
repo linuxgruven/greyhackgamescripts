@@ -2,7 +2,9 @@
 
 
 //update log:
-//Fixed bug in 'hack' command not making use of optional argument when given
+//Stability improvements in some commands (hack, oof)
+//Bug fixes in the 'oof' command
+//added 'brute' - [port] [password list file] [user] bruteforces a users password (attacker shell)
 
 
 
@@ -47,14 +49,36 @@ end if
 
 FantomSystemShell = {}
 
+
+FantomSystemShell.login = {}
+FantomSystemShell.login.func = function(shell,args=null)
+    if args == null then
+        FantomNotify("Please specify a user an password.",true)
+        return
+    end if
+    if args.len >=2 then
+        sh = get_shell(args[0],args[1])
+        if typeof(sh) == "shell" then
+            sh.start_terminal
+        else
+            FantomNotify("Invalid login details.",true)
+        end if
+    else
+        FantomNotify("Too little arguments.",true)
+        return
+    end if
+end function
+
+
 FantomSystemShell.commands = {}
 FantomSystemShell.commands.func = function(shell,args=null)
     print("\n")
     print("<color=green>secure</color><color=#3f3e40>              - Secures your system</color>")
     print("<color=green>decipher</color><color=#3f3e40> [hash]     - Decipher a hash</color>")
     print("<color=green>selfesc</color><color=#3f3e40> [opt:extra] - local escalation</color>")
-    print("<color=green>processlogger - Deprecated and old</color><color=#3f3e40> ")
+    print("<color=green>processlogger - Logs when processes are open/closed</color><color=#3f3e40> ")
     print("<color=green>usegift - Automatically connect to wifi in gift.txt</color><color=#3f3e40> ")
+    print("<color=green>login - Login as another user (no sudo binary required)</color><color=#3f3e40> ")
 
     print("\n<color=green>Misc commands.</color>\n")
 
@@ -302,6 +326,28 @@ FantomXploit.loadLib = function(self,file)
     end if
 end function
 
+
+FantomXploit.isPortDead = function(self,ip,aport)
+    r = get_router(ip)
+    if r then
+        lans = r.devices_lan_ip
+        for lan in lans
+            ports = r.device_ports(lan)
+            if ports == null then continue
+            for port in ports
+                if port.port_number != aport then continue
+                info = r.port_info(port).split(" ")[0]
+                if info == "unknown" then
+                    return true
+                else
+                    return false
+                end if
+            end for
+        end for
+        return true
+    end if
+end function
+
 FantomXploit.getDumpedLib = function(self,ip,port=null)
     if not self.sanity then
         return
@@ -311,11 +357,13 @@ FantomXploit.getDumpedLib = function(self,ip,port=null)
         if typeof(lib) != "net_session" then //These two if statements patch the kernel_router delete secure method
             lib = mx.net_use(ip,port)
         end if
+
     else
         lib = mx.net_use(ip)
         if typeof(lib) != "net_session" then
             lib = mx.net_use(ip)
         end if
+
     end if
     return lib.dump_lib
 end function
@@ -418,9 +466,9 @@ FantomAttackerShell.commands.func = function(shell,args=null)
 
     print("\n<color=green>Hacking.</color>\n")
 
+    print("<color=green>brute</color><color=#3f3e40> [port] [pass list] [user] Password bruteforcer (ssh/ftp only)</color>")
     print("<color=green>hack</color><color=#3f3e40> [port]          - Hacks target port</color>")
     print("<color=green>pentest</color><color=#3f3e40> [port]       - View objects returned</color>")
-    print("<color=green>login</color><color=#3f3e40> [user] [pass]  - Login as another user (requires SSH service)</color>")
     print("<color=green>rob</color><color=#3f3e40>                  - Grab all banks</color>")
     print("<color=green>selfesc</color><color=#3f3e40> [opt:extra] - local escalation</color>")
 
@@ -458,6 +506,30 @@ end function
 
 
 
+FantomAttackerShell["brute"] = {}
+FantomAttackerShell["brute"].func = function(shell,args=null)
+    if args == null then
+        FantomNotify("Please provide the ssh port, the password file, and a user.", true)
+        return
+    end if
+    file = get_shell.host_computer.File(args[1])
+    if not file then
+        FantomNotify("Invalid file.",true)
+        return
+    end if
+    if args.len >= 2 then
+        for pw in file.get_content.split("\n")
+            sh = get_shell.connect_service(shell.target,args[0].to_int,args[2],pw)
+            if typeof(sh) == "shell" then
+                print(args[2]+":"+pw+" "+args[0])
+                break
+            else
+                FantomNotify("Fantom is cracking the password. "+args[2]+":"+pw, true)
+            end if
+        end for
+    end if
+end function
+
 
 FantomAttackerShell["net-rob"] = {}
 FantomAttackerShell["net-rob"].func = function(shell,args=null)
@@ -491,6 +563,7 @@ FantomAttackerShell["net-rob"].func = function(shell,args=null)
             blist.push(port.get_lan_ip)
 
             lib =  exploit.getDumpedLib(shell.target,port.port_number)
+
             mem = exploit.getMemoryZones(lib)
             vulns = exploit.getVulns(lib,mem)
 
@@ -555,6 +628,7 @@ FantomAttackerShell["net-rob"].func = function(shell,args=null)
 
         for lan in lans
             lib =  exploit.getDumpedLib(shell.target)
+
             mem = exploit.getMemoryZones(lib)
             vulns = exploit.getVulns(lib,mem,lan)
 
@@ -623,6 +697,7 @@ FantomAttackerShell["oof"] = {}
 FantomAttackerShell["oof"].func = function(shell,args=null)
     FantomNotify("Fantom will crash sometimes when using this.",true)
     FantomNotify("Grey Hack doesn't like these style of scripts",true)
+    FantomNotify("If fantom detects a binary named 'escalate' in its current directory it will ask to use that for self escalation")
     wait(2)
 
     
@@ -649,106 +724,95 @@ FantomAttackerShell["oof"].func = function(shell,args=null)
 
     exploit = new FantomXploit
     r = get_router(shell.target)
-    blist = []
-    banned = false
+    prev = ""
 
     if r then
 
         ports = r.used_ports
         for port in ports
-            escdeb = false
 
-            for bannedips in blist
-                if port.get_lan_ip == bannedips then
-                    banned = true
-                end if
-            end for
-
-            if banned then
-                banned = false
+            if exploit.isPortDead(shell.target,port.port_number) then
+                FantomNotify("Port is dead/unknown. skipping",true)
                 continue
             end if
+
+            if port.get_lan_ip != prev then
+                escdeb = false
+            end if
+            prev = port.get_lan_ip
+
 
             if port.is_closed then
                 continue
             end if
 
-            blist.push(port.get_lan_ip)
+
+
 
             lib =  exploit.getDumpedLib(shell.target,port.port_number)
+
             mem = exploit.getMemoryZones(lib)
             vulns = exploit.getVulns(lib,mem)
 
 
             for vuln in vulns
 
+
+
+
                 if typeof(vuln) == "shell" then
 
 
-
-                    passwd = vuln.host_computer.File("/etc/passwd")
-
-                    if passwd.has_permission("r") then
-
-                        pwdcontent = password.get_content
-                        for line in pwdcontent.split("\n")
-                            sep = line.split(":")
-
-                            if sep[0] == "root" then
-                                rootpass = crypto.deciper(sep[1])
-                                sh = get_shell("root",rootpass)
-                                root = sh.host_computer.File("/")
-                                recursiveoof(root)
-                                break
-                            end if
-
-                        end for
-
-                    end if
-
-
-                    if esclateBin then
+                    if esclateBin and escdeb == false then
+                        escdeb = true
                         FantomNotify("Fantom has noticed that you have a binary called 'escalate'. Should Fantom upload an execute this? y/n")
                         FantomNotify("Fantom will launch this binary with a extra argument for a password (it's 'fantom') but you can ignore this",true)
                         said = user_input(":",0,1)
                         if said.lower == "y" then
-                            if not escdeb then
-                                escdeb = true
-                                get_shell.scp(current_path+"/escalate","/home/guest",vuln)
-                                get_shell.scp("/lib/metaxploit.so","/home/guest",vuln)
-                                get_shell.scp("/lib/crypto.so","/home/guest",vuln)
-                                vuln.launch("/home/guest/escalate","fantom")
-                            end if
+                            get_shell.scp(current_path+"/escalate","/home/guest",vuln)
+                            get_shell.scp("/lib/metaxploit.so","/home/guest",vuln)
+                            get_shell.scp("/lib/crypto.so","/home/guest",vuln)
+                            vuln.launch("/home/guest/escalate","fantom")
                         end if
                     end if
 
                     root = vuln.host_computer.File("/")
                     home = vuln.host_computer.File("/home")
+
+
                     if home then 
                         for users in home.get_folders
                             sh = get_shell(users.name,"fantom")
 
 
                             if typeof(sh) == "shell" then
+                                
 
                                 passwd = sh.host_computer.File("/etc/passwd")
 
-                                if passwd.has_permission("r") then
+                                if passwd then
 
-                                    pwdcontent = password.get_content
-                                    for line in pwdcontent.split("\n")
-                                        sep = line.split(":")
+                                    if passwd.has_permission("r") then
 
-                                        if sep[0] == "root" then
-                                            rootpass = crypto.deciper(sep[1])
-                                            sh = get_shell("root",rootpass)
-                                            root = sh.host_computer.File("/")
-                                            recursiveoof(root)
-                                            break
-                                        end if
+                                        pwdcontent = passwd.get_content
+                                        for line in pwdcontent.split("\n")
+                                            sep = line.split(":")
 
-                                    end for
+                                            if sep[0] == "root" then
+                                                rootpass = crypto.decipher(sep[1])
+                                                print("root pass = "+rootpass)
+                                                print(sep[1])
+                                                sh = get_shell("root",rootpass)
+                                                if typeof(sh) == "shell" then
+                                                    root = sh.host_computer.File("/")
+                                                    recursiveoof(root)
+                                                end if
+                                                break
+                                            end if
 
+                                        end for
+
+                                    end if
                                 end if
 
                                 root = sh.host_computer.File("/")
@@ -757,13 +821,18 @@ FantomAttackerShell["oof"].func = function(shell,args=null)
                         end for
                     end if
 
+
+
+
+
+
                     rootlogin = get_shell("root","fantom")
                     if typeof(rootlogin) == "shell" then
                         root = rootlogin.host_computer.File("/")
+                        recursiveoof(root)
                     end if
 
 
-                    recursiveoof(root)
 
                 end if
 
@@ -786,6 +855,7 @@ FantomAttackerShell["oof"].func = function(shell,args=null)
 
 
         rlib =  exploit.getDumpedLib(shell.target,0)
+
         rmem = exploit.getMemoryZones(lib)
         for lan in r.devices_lan_ip
             rvulns = exploit.getVulns(rlib,rmem,lan)
@@ -852,6 +922,7 @@ FantomAttackerShell.pentest.func = function(shell,args=null)
 
     exploit = new FantomXploit
     lib = exploit.getDumpedLib(shell.target,args[0].to_int)
+
     mem = exploit.getMemoryZones(lib)
     vulns = exploit.getVulns(lib,mem)
 
@@ -881,6 +952,7 @@ FantomAttackerShell.hackrouter.func = function(shell,args=null)
 
     exploit = new FantomXploit
     lib = exploit.getDumpedLib(shell.target)
+
     mem = exploit.getMemoryZones(lib)
     if args then
         vulns = exploit.getVulns(lib,mem,args[0])
@@ -980,8 +1052,13 @@ FantomAttackerShell.hack.func = function(shell,args=null)
 
     exploit = new FantomXploit
 
-    
+    if exploit.isPortDead(shell.target,args[0].to_int) then
+        FantomNotify("Invalid port.", true)
+        return
+    end if
+
     lib = exploit.getDumpedLib(shell.target,args[0].to_int)
+
 
     mem = exploit.getMemoryZones(lib)
     if not args.hasIndex(1) then
@@ -1149,6 +1226,7 @@ FantomSharedCommands.connectwifi.func = function(shell,args=null)
             pwr = data[1].replace("%","")
             pwr = pwr.to_int
             calc = floor(300000/pwr)
+            //interestingly this fails during high server lag (returns an empty string)
             FantomNotify("Fantom will stop automatically when theres enough ACKS.")
             err = crypto.aireplay(data[0],data[2],calc)
 
@@ -1165,6 +1243,16 @@ FantomSharedCommands.connectwifi.func = function(shell,args=null)
         end if
     end for
 
+
+end function
+
+FantomSharedCommands.test = {}
+FantomSharedCommands.test.func = function(shell,args=null)
+
+    r = get_router
+    x = new FantomXploit
+    res = x.isPortDead(r.public_ip,81)
+    print(res)
 
 end function
 
@@ -1386,29 +1474,7 @@ FantomSharedCommands.spook.func = function(shell,args=null)
 
 end function
 
-FantomSharedCommands.test = {}
-FantomSharedCommands.test.func = function(shell,args=null)
-    if debug == false then
-        FantomNotify("test is a debug command created for testing purposes during development and is still used.",true)
-        FantomNotify("If you want to run it please enable debug mode in the source code",true)   
-        FantomNotify("This is put in place to prevent issues",true)    
-        return
-    end if
 
-    //Currently its just checking that the autohacker is working as intended
-    //Spent multiple days fixing an issue where it would grab the wrong memory address an unsecure value
-    if args == null then
-        return
-    end if
-    x = new FantomXploit
-    lib = x.getDumpedLib(args[0],args[1].to_int)
-    mem = x.getMemoryZones(lib)
-    vulns = x.getVulns(lib,mem)
-
-    for vuln in vulns
-        print(vuln)
-    end for
-end function
 
 FantomAMCShell = {}
 amcmail = ""
@@ -1460,6 +1526,11 @@ FantomSharedCommands.amc.func = function(shell,args=null)
     shell.system = false
     shell.ct = FantomAMCShell
     shell.prefix = "<color=green>AMC > </color>"
+end function
+
+
+FantomSharedCommands["amc-list"].func = function(shell,args=null)
+
 end function
 
 
