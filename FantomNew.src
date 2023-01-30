@@ -2,16 +2,7 @@
 
 
 //update log:
-//added oof (network-wide destroyer)
-//added processlogger - Notifies you when processes have opened/closed on your machine (rshell finder)
-//added ps - Same as /bin/ps but cant be replaced
-
-//assuming libs were installed by Fantom you can now update metaxploit at any time with the 'updatemx' command
-//Fantom adds the hackshop's repository as an apt source
-
-//rewrote some broken auto hacker stuff
-//added 'connectwifi' command (usage: connectwifi [essid] - cracks and connects to specified wifi)
-//started work on AMC (automatic mission completion)
+//Fixed bug in 'hack' command not making use of optional argument when given
 
 
 
@@ -365,7 +356,11 @@ FantomXploit.getVulns = function(self,lib,memoryZones,extra=null)
                 unsafe = unsafe.replace("</b>","")
 
                 //print(unsafe + address)
-                got = lib.overflow(address,unsafe)
+                if extra == null then
+                    got = lib.overflow(address,unsafe)
+                else
+                    got = lib.overflow(address,unsafe,extra)
+                end if
                 vulns.push(got)
             end if
         end for
@@ -968,7 +963,8 @@ FantomAttackerShell.hack.func = function(shell,args=null)
         return
     end if
     if args == null then
-        args = []
+        FantomNotify("Please specify a port and a extra parameter if you want",true)
+        return
     end if
 
     use=function(type)
@@ -981,20 +977,19 @@ FantomAttackerShell.hack.func = function(shell,args=null)
         end if
     end function
 
+
     exploit = new FantomXploit
-    if args.hasIndex(0) then
-        if not args[0] == "-" then
-            lib = exploit.getDumpedLib(shell.target,args[0].to_int)
-        else
-            lib = exploit.getDumpedLib(shell.target)
-        end if
-    else
-        lib = exploit.getDumpedLib(shell.target)
-    end if
+
+    
+    lib = exploit.getDumpedLib(shell.target,args[0].to_int)
+
     mem = exploit.getMemoryZones(lib)
     if not args.hasIndex(1) then
         vulns = exploit.getVulns(lib,mem)
-    else
+    end if
+
+    if args.hasIndex(1) then
+        print("called with extra args.")
         vulns = exploit.getVulns(lib,mem,args[1])
     end if
 
