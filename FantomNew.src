@@ -2,9 +2,7 @@
 
 
 //update log:
-//Stability improvements in some commands (hack, oof)
-//Bug fixes in the 'oof' command
-//added 'brute' - [port] [password list file] [user] bruteforces a users password (attacker shell)
+//Crash fix ( i forgot one line lol )
 
 
 
@@ -1528,7 +1526,7 @@ FantomSharedCommands.amc.func = function(shell,args=null)
     shell.prefix = "<color=green>AMC > </color>"
 end function
 
-
+FantomSharedCommands["amc-list"] = {}
 FantomSharedCommands["amc-list"].func = function(shell,args=null)
 
 end function
