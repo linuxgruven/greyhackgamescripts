@@ -1,8 +1,9 @@
 
-
-
 //update log:
-//Crash fix ( i forgot one line lol )
+//Fantom will now prompt you to update exploit libs when they're out of date at startup
+// Fantom will no longer scan for libs at boot when the computer has no wifi
+  // Trying to search anyways will start Fantom with hacking commands disabled
+// Added some extra details as to why lib scanning can take a while
 
 
 
@@ -27,17 +28,24 @@ mx = include_lib("/lib/metaxploit.so")
 crypto = include_lib("/lib/crypto.so")
 apt = include_lib("/lib/aptclient.so")
 
+mxpath=""
+cryptopath=""
+
 if mx == null then
     mx = include_lib(current_path+"/metaxploit.so")
+    mxpath=current_path+"/metaxploit.so"
     if mx == null then
         mx = include_lib("/home/guest/metaxploit.so")
+        mxpath="/home/guest/metaxploit.so"
     end if
 end if
 
 if crypto == null then
     crypto = include_lib(current_path+"/crypto.so")
+    cryptopath=current_path+"/crypto.so"
     if crypto == null then
         crypto = include_lib("/home/guest/crypto.so")
+        cryptopath="/home/guest/crypto.so"
     end if
 end if
 
@@ -242,11 +250,17 @@ if not hackingEnabled then
 
     FantomNotify("Fantom has detected missing libs. Would you like Fantom to install them? y/n",true)
     FantomNotify("In some cases this can take multiple minutes or even longer.\n",true)
+    FantomNotify("Times depend on how fresh the world is. best used in mp (newer = longer times)",true)
     pick = user_input("<color=green> ></color>")
+    
+    if not get_shell.host_computer.is_network_active then
+    	FantomNotify("You need internet to download libs. Fantom will start with hacking commands disabled.",true)
+    	pick = "n"
+    end if
     
     if pick == "y" and apt != null then
 
-        print("<color=green>This can take a while.. please be patient</color>")
+        print("<color=green>Fantom is searching. please read the above text while you're waiting</color>")
 
 
         hs = findService("repository")
@@ -293,6 +307,21 @@ if not hackingEnabled then
     end if
 
     clear_screen
+else
+	mxupdated = apt.check_upgrade(mxpath)
+	cryptoupdated = apt.check_upgrade(cryptopath)
+	if mxupdated == true or cryptoupdated == true then
+		FantomLogo
+		print("\n")
+		FantomNotify("Fantom has detected out of date exploit libs.",false)
+		FantomNotify("Should fantom update these for you? y/n",false)
+		FantomNotify("Don't worry! this doesn't upgrade other libs on your system",true)
+		said = user_input(":",0,1)
+		if said.lower == "y" then
+			apt.install("metaxploit.so",mxpath)
+			apt.install("crypto.so",cryptopath)
+		end if
+	end if
 end if
 
 
@@ -1713,3 +1742,4 @@ s = new FantomShell
 s.init(defaultPrefix,defaultCommandTable)
 FantomLogo
 s.mainLoop
+
