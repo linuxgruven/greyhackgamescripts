@@ -14,11 +14,10 @@ Do feel free to open an issue if something breaks or you want to suggest somethi
 
 
 update log:
- - Stability improvements in some commands (hack, oof)
-
- - Bug fixes in the 'oof' command
-
- - added 'brute' - [port] [password list file] [user] bruteforces a users password (attacker shell)
+//Fantom will now prompt you to update exploit libs when they're out of date at startup
+// Fantom will no longer scan for libs at boot when the computer has no wifi
+  // Trying to search anyways will start Fantom with hacking commands disabled
+// Added some extra details as to why lib scanning can take a while
 
 
 
