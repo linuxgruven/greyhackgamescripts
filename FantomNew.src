@@ -1,9 +1,13 @@
 
 //update log:
-//Fantom will now prompt you to update exploit libs when they're out of date at startup
-// Fantom will no longer scan for libs at boot when the computer has no wifi
-  // Trying to search anyways will start Fantom with hacking commands disabled
-// Added some extra details as to why lib scanning can take a while
+//- stability improvements in the 'oof' command
+
+//- The 'oof' command will no longer silently fail at uploading the binary if /home/guest does not exist 
+//on the target
+
+ //- for some reason not all commands were in the commands list?
+
+ //- 'connectwifi' has been renamed to 'wifihack' so its more clear 
 
 
 
@@ -16,8 +20,6 @@
 //This would be in its own seperate Fantom shell.
 //Updating the DB with new service versions would be as easy as running a command in Fantom for a couple minutes depending on hardware
 //This 'command' would scour the web for service versions it doesnt have in the db and note down the addresses an unsafe values into the DB
-
-//Prompt user to update metaxploit.so for them on startup if its outdated
 
 
 
@@ -80,6 +82,7 @@ FantomSystemShell.commands = {}
 FantomSystemShell.commands.func = function(shell,args=null)
     print("\n")
     print("<color=green>secure</color><color=#3f3e40>              - Secures your system</color>")
+    print("<color=green>wifihack</color><color=#3f3e40>            - Automatically hack and connect to wifi</color>")
     print("<color=green>decipher</color><color=#3f3e40> [hash]     - Decipher a hash</color>")
     print("<color=green>selfesc</color><color=#3f3e40> [opt:extra] - local escalation</color>")
     print("<color=green>processlogger - Logs when processes are open/closed</color><color=#3f3e40> ")
@@ -495,6 +498,7 @@ FantomAttackerShell.commands.func = function(shell,args=null)
 
     print("<color=green>brute</color><color=#3f3e40> [port] [pass list] [user] Password bruteforcer (ssh/ftp only)</color>")
     print("<color=green>hack</color><color=#3f3e40> [port]          - Hacks target port</color>")
+    print("<color=green>hackrouter</color><color=#3f3e40> [port]    - Hacks target port</color>")
     print("<color=green>pentest</color><color=#3f3e40> [port]       - View objects returned</color>")
     print("<color=green>rob</color><color=#3f3e40>                  - Grab all banks</color>")
     print("<color=green>selfesc</color><color=#3f3e40> [opt:extra] - local escalation</color>")
@@ -731,21 +735,23 @@ FantomAttackerShell["oof"].func = function(shell,args=null)
     esclateBin = get_shell.host_computer.File(current_path+"/escalate")
 
     recursiveoof = function(start)
-        for file in start.get_files
-            if not file then
-                continue
-            end if
-            //print(file.name)
-            file.delete()
-        end for
-        for folder in start.get_folders
-            if not folder then
-                continue
-            end if
-            //print(folder.name)
-            recursiveoof(folder)
-            folder.delete()
-        end for
+        if start then
+            for file in start.get_files
+                if not file then
+                    continue
+                end if
+                //print(file.name)
+                file.delete()
+            end for
+            for folder in start.get_folders
+                if not folder then
+                    continue
+                end if
+                //print(folder.name)
+                recursiveoof(folder)
+                folder.delete()
+            end for
+        end if
     end function
 
 
@@ -796,10 +802,14 @@ FantomAttackerShell["oof"].func = function(shell,args=null)
                         FantomNotify("Fantom will launch this binary with a extra argument for a password (it's 'fantom') but you can ignore this",true)
                         said = user_input(":",0,1)
                         if said.lower == "y" then
-                            get_shell.scp(current_path+"/escalate","/home/guest",vuln)
-                            get_shell.scp("/lib/metaxploit.so","/home/guest",vuln)
-                            get_shell.scp("/lib/crypto.so","/home/guest",vuln)
-                            vuln.launch("/home/guest/escalate","fantom")
+                            success = get_shell.scp(current_path+"/escalate","/home/guest",vuln)
+                            if typeof(success) == "number" then
+                                get_shell.scp("/lib/metaxploit.so","/home/guest",vuln)
+                                get_shell.scp("/lib/crypto.so","/home/guest",vuln)
+                                vuln.launch("/home/guest/escalate","fantom")
+                            else
+                                FantomNotify("escalation binary was not uploaded. no /home/guest",true)
+                            end if
                         end if
                     end if
 
@@ -1222,8 +1232,8 @@ FantomSharedCommands.ps.func = function(shell,args=null)
 end function
 
 
-FantomSharedCommands.connectwifi = {}
-FantomSharedCommands.connectwifi.func = function(shell,args=null)
+FantomSharedCommands.wifihack = {}
+FantomSharedCommands.wifihack.func = function(shell,args=null)
     if args == null then
         FantomNotify("Please type the name of the WIFI network.",true)
         return
@@ -1742,4 +1752,5 @@ s = new FantomShell
 s.init(defaultPrefix,defaultCommandTable)
 FantomLogo
 s.mainLoop
+
 
