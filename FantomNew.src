@@ -9,7 +9,8 @@
 
  //- 'connectwifi' has been renamed to 'wifihack' so its more clear 
 
-
+//- and another patch to fix the coloring in the commands list for the system shell lol
+//- not gonna announce this update though
 
 //ideas:
 
@@ -85,9 +86,9 @@ FantomSystemShell.commands.func = function(shell,args=null)
     print("<color=green>wifihack</color><color=#3f3e40>            - Automatically hack and connect to wifi</color>")
     print("<color=green>decipher</color><color=#3f3e40> [hash]     - Decipher a hash</color>")
     print("<color=green>selfesc</color><color=#3f3e40> [opt:extra] - local escalation</color>")
-    print("<color=green>processlogger - Logs when processes are open/closed</color><color=#3f3e40> ")
-    print("<color=green>usegift - Automatically connect to wifi in gift.txt</color><color=#3f3e40> ")
-    print("<color=green>login - Login as another user (no sudo binary required)</color><color=#3f3e40> ")
+    print("<color=green>processlogger</color><color=#3f3e40>  - Logs when processes are open/closed</color>")
+    print("<color=green>usegift</color><color=#3f3e40>  - Automatically connect to wifi in gift.txt</color>")
+    print("<color=green>login</color><color=#3f3e40>  - Login as another user (no sudo binary required)</color>")
 
     print("\n<color=green>Misc commands.</color>\n")
 
