@@ -1,27 +1,40 @@
 
 //update log:
-//- stability improvements in the 'oof' command
+//- added 'streamer' command - prevents sensitive information from being displayed
+//- finder might be a little faster (thanks gk258)
+//- fixed crash in 'hack' command if the targets home folder is missing
 
-//- The 'oof' command will no longer silently fail at uploading the binary if /home/guest does not exist 
-//on the target
+//finder command now enters attacker mode with the target being the ip found
 
- //- for some reason not all commands were in the commands list?
+//- removed 'net-rob' command due to how bank accounts basically have no money
+//- (it's just commented out in the source code and can be put back)
+// just uncomment lines 544-598
 
- //- 'connectwifi' has been renamed to 'wifihack' so its more clear 
-
-//- and another patch to fix the coloring in the commands list for the system shell lol
-//- not gonna announce this update though
 
 //ideas:
 
-//considering removing net-rob and other bank features due to how little money you can find in them
-//'net-rob' was a command that hacked every machine on a network that it could and read out the contents of every users bank file
+//exploit db support
+//libmonitor - watches for lib updates and alerts you
+    //could be very nice in combination with the 'finder' command to hunt for secure libs
 
-//thinking about exploit DB support
-//This would be in its own seperate Fantom shell.
-//Updating the DB with new service versions would be as easy as running a command in Fantom for a couple minutes depending on hardware
-//This 'command' would scour the web for service versions it doesnt have in the db and note down the addresses an unsafe values into the DB
+//email bruteforcer
 
+//email bomber
+//this would have two modes "multi" or "single"
+
+//"single" - the user would input the details of a single mail account
+    //fantom would then bombard the user with ads
+
+//"multi" - the user would be prompted to give a file of npc mail accounts in user:password format
+    //this would then login to each one in the list and send them a randomly picked "ad"
+
+//ad ideas:
+//hackers in your area
+//rickroll lyrics
+//raid shadow legends ad
+//nord vpn ad
+//dashlane ad
+//tech support scam
 
 
 
@@ -33,6 +46,7 @@ apt = include_lib("/lib/aptclient.so")
 
 mxpath=""
 cryptopath=""
+globals.streamerMode = false
 
 if mx == null then
     mx = include_lib(current_path+"/metaxploit.so")
@@ -51,9 +65,6 @@ if crypto == null then
         cryptopath="/home/guest/crypto.so"
     end if
 end if
-
-
-
 
 
 FantomSystemShell = {}
@@ -128,12 +139,6 @@ end function
 
 
 
-
-
-
-
-
-
 defaultPrefix = "\n<color=#3f3e40>Fantom <color=green>[SYSTEM]</color> > </color>"
 defaultAttackerPrefix = "\n<color=#3f3e40>Fantom <color=green>[ATTACKER]</color> > </color>"
 
@@ -159,20 +164,17 @@ ipgen = function()
         pull = r.pull
         ip = ip + pull+"."
 
-        if i == 1 and pull == "192" then
-            ipgen
-        end if
-
     end for
     ip = ip[:-1]
 
+    if is_lan_ip(ip) then
+        ipgen
+    end if
     if not is_valid_ip(ip) then
         ipgen
     end if
-    if not get_shell.ping(ip) then
-        ipgen
-    end if
 
+    //print(ip)
     return ip
 end function
 
@@ -484,8 +486,6 @@ FantomXploit.getAddresses = function(self,lib,memoryZones,extra=null)
 end function
 
 
-
-
 FantomAttackerShell = {}
 
 
@@ -562,162 +562,170 @@ FantomAttackerShell["brute"].func = function(shell,args=null)
     end if
 end function
 
+//i will not be updating this code anymore as i no longer see a reason to keep this command
+//missions are the way to get money now
+//i left it here just incase someone still wanted it
 
-FantomAttackerShell["net-rob"] = {}
-FantomAttackerShell["net-rob"].func = function(shell,args=null)
-    FantomNotify("Fantom will crash sometimes when using this.",true)
-    FantomNotify("Grey Hack doesn't like these style of scripts",true)
-    wait(2)
-    exploit = new FantomXploit
-    r = get_router(shell.target)
-    blist = []
-    banned = false
-    if r then
+//just cause i no longer support it doesn't mean you cannot
+//I don't care what people do with Fantom and greyscript/miniscript is easy (the discord/in-game manual is awesome for getting helped)
+//fork Fantom on github and maintain your own copy!
 
-        ports = r.used_ports
-        for port in ports
-
-            for bannedips in blist
-                if port.get_lan_ip == bannedips then
-                    banned = true
-                end if
-            end for
-
-            if banned then
-                banned = false
-                continue
-            end if
-
-            if port.is_closed then
-                continue
-            end if
-
-            blist.push(port.get_lan_ip)
-
-            lib =  exploit.getDumpedLib(shell.target,port.port_number)
-
-            mem = exploit.getMemoryZones(lib)
-            vulns = exploit.getVulns(lib,mem)
-
-
-            for vuln in vulns
-
-                if typeof(vuln) == "shell" then
-
-                    users = vuln.host_computer.File("/home")
-                    if users then
-
-                        for user in users.get_folders
-                            bank = "/home/"+user.name+"/Config/Bank.txt"
-                            bankFile = vuln.host_computer.File(bank)
-                            if bankFile then
-
-                                if bankFile.has_permission("r") then
-                                    print(bankFile.get_content)
-                                end if
-
-                            end if
-                        end for
-
-                    end if
-
-                end if
-
-
-
-
-                if typeof(vuln) == "computer" then
-
-                    users = vuln.File("/home")
-                    if users then
-
-                        for user in users.get_folders
-                            bank = "/home/"+user.name+"/Config/Bank.txt"
-                            bankFile = vuln.File(bank)
-                            if bankFile then
-
-                                if bankFile.has_permission("r") then
-                                    print(bankFile.get_content)
-                                end if
-
-                            end if
-                        end for
-
-                    end if
-
-                end if
-
-
-
-
-            end for
-
-           
-        end for
-
-
-        lans  = r.devices_lan_ip
-
-        for lan in lans
-            lib =  exploit.getDumpedLib(shell.target)
-
-            mem = exploit.getMemoryZones(lib)
-            vulns = exploit.getVulns(lib,mem,lan)
-
-            for vuln in vulns
-
-                if typeof(vuln) == "shell" then
-
-                    users = vuln.host_computer.File("/home")
-                    if users then
-
-                        for user in users.get_folders
-                            bank = "/home/"+user.name+"/Config/Bank.txt"
-                            bankFile = vuln.host_computer.File(bank)
-                            if bankFile then
-
-                                if bankFile.has_permission("r") then
-                                    print(bankFile.get_content)
-                                end if
-
-                            end if
-                        end for
-
-                    end if
-
-                end if
-
-
-
-
-                if typeof(vuln) == "computer" then
-
-                    users = vuln.File("/home")
-                    if users then
-
-                        for user in users.get_folders
-                            bank = "/home/"+user.name+"/Config/Bank.txt"
-                            bankFile = vuln.File(bank)
-                            if bankFile then
-
-                                if bankFile.has_permission("r") then
-                                    print(bankFile.get_content)
-                                end if
-
-                            end if
-                        end for
-
-                    end if
-
-                end if
-            end for
-
-        end for
-
-
-    end if
-
-end function
+//FantomAttackerShell["net-rob"] = {}
+//FantomAttackerShell["net-rob"].func = function(shell,args=null)
+//    FantomNotify("This command is no longer receiving updates. when Grey Hack breaks it that will be the end",true)
+//    FantomNotify("Fantom will crash sometimes when using this.",true)
+//    FantomNotify("Grey Hack doesn't like these style of scripts",true)
+//    wait(2)
+//    exploit = new FantomXploit
+//    r = get_router(shell.target)
+//    blist = []
+//    banned = false
+//    if r then
+//
+//        ports = r.used_ports
+//        for port in ports
+//
+//            for bannedips in blist
+//                if port.get_lan_ip == bannedips then
+//                    banned = true
+//                end if
+//            end for
+//
+//            if banned then
+//                banned = false
+//                continue
+//            end if
+//
+//            if port.is_closed then
+//                continue
+//            end if
+//
+//            blist.push(port.get_lan_ip)
+//
+//            lib =  exploit.getDumpedLib(shell.target,port.port_number)
+//
+//            mem = exploit.getMemoryZones(lib)
+//            vulns = exploit.getVulns(lib,mem)
+//
+//
+//            for vuln in vulns
+//
+//                if typeof(vuln) == "shell" then
+//
+//                    users = vuln.host_computer.File("/home")
+//                    if users then
+//
+//                        for user in users.get_folders
+//                            bank = "/home/"+user.name+"/Config/Bank.txt"
+//                            bankFile = vuln.host_computer.File(bank)
+//                            if bankFile then
+//
+//                                if bankFile.has_permission("r") then
+//                                    print(bankFile.get_content)
+//                                end if
+//
+//                            end if
+//                        end for
+//
+//                    end if
+//
+//                end if
+//
+//
+//
+//
+//                if typeof(vuln) == "computer" then
+//
+//                    users = vuln.File("/home")
+//                    if users then
+//
+//                        for user in users.get_folders
+//                            bank = "/home/"+user.name+"/Config/Bank.txt"
+//                            bankFile = vuln.File(bank)
+//                            if bankFile then
+//
+//                                if bankFile.has_permission("r") then
+//                                    print(bankFile.get_content)
+//                                end if
+//
+//                            end if
+//                        end for
+//
+//                    end if
+//
+//                end if
+//
+//
+//
+//
+//            end for
+//
+//           
+//        end for
+//
+//
+//        lans  = r.devices_lan_ip
+//
+//        for lan in lans
+//            lib =  exploit.getDumpedLib(shell.target)
+//
+//            mem = exploit.getMemoryZones(lib)
+//            vulns = exploit.getVulns(lib,mem,lan)
+//
+//            for vuln in vulns
+//
+//                if typeof(vuln) == "shell" then
+//
+//                    users = vuln.host_computer.File("/home")
+//                    if users then
+//
+//                        for user in users.get_folders
+//                            bank = "/home/"+user.name+"/Config/Bank.txt"
+//                            bankFile = vuln.host_computer.File(bank)
+//                            if bankFile then
+//
+//                                if bankFile.has_permission("r") then
+//                                    print(bankFile.get_content)
+//                                end if
+//
+//                            end if
+//                        end for
+//
+//                    end if
+//
+//                end if
+//
+//
+//
+//
+//                if typeof(vuln) == "computer" then
+//
+//                    users = vuln.File("/home")
+//                    if users then
+//
+//                        for user in users.get_folders
+//                            bank = "/home/"+user.name+"/Config/Bank.txt"
+//                            bankFile = vuln.File(bank)
+//                            if bankFile then
+//
+//                                if bankFile.has_permission("r") then
+//                                    print(bankFile.get_content)
+//                                end if
+//
+//                            end if
+//                        end for
+//
+//                    end if
+//
+//                end if
+//            end for
+//
+//        end for
+//
+//
+//    end if
+//
+//end function
 
 
 
@@ -804,7 +812,7 @@ FantomAttackerShell["oof"].func = function(shell,args=null)
                         said = user_input(":",0,1)
                         if said.lower == "y" then
                             success = get_shell.scp(current_path+"/escalate","/home/guest",vuln)
-                            if typeof(success) == "number" then
+                            if not typeof(success) == "string" then
                                 get_shell.scp("/lib/metaxploit.so","/home/guest",vuln)
                                 get_shell.scp("/lib/crypto.so","/home/guest",vuln)
                                 vuln.launch("/home/guest/escalate","fantom")
@@ -924,6 +932,7 @@ FantomAttackerShell["oof"].func = function(shell,args=null)
 
     end if
 
+    ShowTargetInfo(shell.target)
 end function
 
 
@@ -1127,9 +1136,11 @@ FantomAttackerShell.hack.func = function(shell,args=null)
                     end if
                 end if
                 
-                users = vuln.File("/home").get_folders
+                users = vuln.File("/home")
 
                 if users then
+
+                    users = vuln.File("/home").get_folders
 
                     for user in users
 
@@ -1184,6 +1195,18 @@ end function
 
 //These commands are shared between the attacker an system shell
 FantomSharedCommands = {}
+
+FantomSharedCommands.streamer = {}
+FantomSharedCommands.streamer.func = function(args=null)
+    if globals.streamerMode then
+        globals.streamerMode = false
+        FantomNotify("Streamer mode has been disabled. be careful!")
+    else
+        globals.streamerMode = true
+        FantomNotify("Streamer mode has been enabled.")
+        FantomNotify("Streamer mode hides sensitive information",true)
+    end if
+end function
 
 
 FantomSharedCommands.help = {}
@@ -1462,6 +1485,10 @@ FantomSharedCommands.finder.func = function(shell,args=null)
     //it can only accept service versions due to how the router.port_info function returns the name AND version
 
     ShowTargetInfo(got)
+    shell.target = got
+    shell.ct = FantomAttackerShell
+    shell.prefix = defaultAttackerPrefix
+    shell.system = false
 end function
 
 
@@ -1609,7 +1636,11 @@ ShowTargetInfo = function(ip)
     formatted = format_columns(format_string)
 
     print("<color=green>Recon information.</color>\n")
-    print("\n<color=green>"+ip+"</color>\n")
+    if not globals.streamerMode then
+        print("\n<color=green>"+ip+"</color>\n")
+    else
+        print("IP not shown due to streamer mode.\n")
+    end if
 
     print(formatted)
 
@@ -1661,7 +1692,11 @@ FantomShell.mainLoop = function(self)
 
     while true
 
-        said = user_input(self.prefix)
+        if globals.streamerMode then
+            said = user_input(self.prefix,1,0)
+        else
+            said = user_input(self.prefix)
+        end if
 
         if said == "" then
             continue
