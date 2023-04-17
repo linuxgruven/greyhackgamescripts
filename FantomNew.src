@@ -1,14 +1,7 @@
 
 //update log:
-//- added 'streamer' command - prevents sensitive information from being displayed
-//- finder might be a little faster (thanks gk258)
-//- fixed crash in 'hack' command if the targets home folder is missing
-
-//finder command now enters attacker mode with the target being the ip found
-
-//- removed 'net-rob' command due to how bank accounts basically have no money
-//- (it's just commented out in the source code and can be put back)
-// just uncomment lines 544-598
+//- metaxploit update detection now works properly (oops)
+//- fixed crash due to some undocumented behaviour
 
 
 //ideas:
@@ -44,28 +37,50 @@ mx = include_lib("/lib/metaxploit.so")
 crypto = include_lib("/lib/crypto.so")
 apt = include_lib("/lib/aptclient.so")
 
-mxpath=""
-cryptopath=""
+
 globals.streamerMode = false
 
 if mx == null then
     mx = include_lib(current_path+"/metaxploit.so")
-    mxpath=current_path+"/metaxploit.so"
     if mx == null then
         mx = include_lib("/home/guest/metaxploit.so")
-        mxpath="/home/guest/metaxploit.so"
     end if
 end if
 
 if crypto == null then
     crypto = include_lib(current_path+"/crypto.so")
-    cryptopath=current_path+"/crypto.so"
     if crypto == null then
         crypto = include_lib("/home/guest/crypto.so")
-        cryptopath="/home/guest/crypto.so"
     end if
 end if
 
+
+
+FantomNotify = function(message,warn=false)
+    if warn then
+        print("<color=#fc0345>*</color> <color=#3f3e40>"+message+"</color>")
+    else
+        print("<color=green>*</color> <color=#3f3e40>"+message+"</color>")
+    end if
+end function
+
+
+
+mxupdated = apt.check_upgrade("/lib/metaxploit.so")
+cryptoupdated = apt.check_upgrade("/lib/crypto.so")
+
+
+if mxupdated == true or cryptoupdated == true then
+		print("\n")
+		FantomNotify("Fantom has detected out of date exploit libs.",false)
+		FantomNotify("Should fantom update these for you? y/n",false)
+		FantomNotify("Don't worry! this doesn't upgrade other libs on your system",true)
+		said = user_input(":",0,1)
+		if said.lower == "y" then
+			apt.install("metaxploit.so","/lib")
+			apt.install("crypto.so","/lib")
+		end if
+end if
 
 FantomSystemShell = {}
 
@@ -142,13 +157,7 @@ end function
 defaultPrefix = "\n<color=#3f3e40>Fantom <color=green>[SYSTEM]</color> > </color>"
 defaultAttackerPrefix = "\n<color=#3f3e40>Fantom <color=green>[ATTACKER]</color> > </color>"
 
-FantomNotify = function(message,warn=false)
-    if warn then
-        print("<color=#fc0345>*</color> <color=#3f3e40>"+message+"</color>")
-    else
-        print("<color=green>*</color> <color=#3f3e40>"+message+"</color>")
-    end if
-end function
+
 
 
 
@@ -313,22 +322,10 @@ if not hackingEnabled then
     end if
 
     clear_screen
-else
-	mxupdated = apt.check_upgrade(mxpath)
-	cryptoupdated = apt.check_upgrade(cryptopath)
-	if mxupdated == true or cryptoupdated == true then
-		FantomLogo
-		print("\n")
-		FantomNotify("Fantom has detected out of date exploit libs.",false)
-		FantomNotify("Should fantom update these for you? y/n",false)
-		FantomNotify("Don't worry! this doesn't upgrade other libs on your system",true)
-		said = user_input(":",0,1)
-		if said.lower == "y" then
-			apt.install("metaxploit.so",mxpath)
-			apt.install("crypto.so",cryptopath)
-		end if
-	end if
 end if
+
+
+
 
 
 
@@ -1623,6 +1620,7 @@ ShowTargetInfo = function(ip)
 
     for port in ports
 
+        if typeof(port) == "string" then continue
 
         open = "false"
         if not port.is_closed then
