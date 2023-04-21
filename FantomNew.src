@@ -1,8 +1,6 @@
 
 //update log:
-//- metaxploit update detection now works properly (oops)
-//- fixed crash due to some undocumented behaviour
-
+//- Fantom will no longer attempt to update metaxploit if Fantom was not ran as root
 
 //ideas:
 
@@ -76,10 +74,18 @@ if mxupdated == true or cryptoupdated == true then
 		FantomNotify("Should fantom update these for you? y/n",false)
 		FantomNotify("Don't worry! this doesn't upgrade other libs on your system",true)
 		said = user_input(":",0,1)
-		if said.lower == "y" then
-			apt.install("metaxploit.so","/lib")
-			apt.install("crypto.so","/lib")
-		end if
+
+        if active_user != "root" then
+            FantomNotify("Please run Fantom as root in order to use this. update was skipped",true)
+            wait(5)
+        else
+            if said.lower == "y" then
+                apt.install("metaxploit.so","/lib")
+                apt.install("crypto.so","/lib")
+            end if
+        end if
+
+
 end if
 
 FantomSystemShell = {}
@@ -498,7 +504,7 @@ FantomAttackerShell.commands.func = function(shell,args=null)
     print("<color=green>hack</color><color=#3f3e40> [port]          - Hacks target port</color>")
     print("<color=green>hackrouter</color><color=#3f3e40> [port]    - Hacks target port</color>")
     print("<color=green>pentest</color><color=#3f3e40> [port]       - View objects returned</color>")
-    print("<color=green>rob</color><color=#3f3e40>                  - Grab all banks</color>")
+    //print("<color=green>rob</color><color=#3f3e40>                  - Grab all banks</color>")
     print("<color=green>selfesc</color><color=#3f3e40> [opt:extra] - local escalation</color>")
 
     print("\n<color=green>Info gathering/Recon.</color>\n")
