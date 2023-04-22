@@ -1,6 +1,6 @@
 
 //update log:
-//- Fantom will no longer attempt to update metaxploit if Fantom was not ran as root
+//- Fantom now contains a 'credits' command to thank the people who helped
 
 //ideas:
 
@@ -236,8 +236,7 @@ FantomLogo = function()
     print("<color=green> /       \</color>")
     print("<color=green>/         \</color>")
     print("<color=green>|/\/\/\/\/|</color>\n")
-    //ASCII art is hard haha
-    //I tried
+
 
 
     print("<color=green><b>Fantom</b></color> <color=#3f3e40>Rewritten</color>")
@@ -1076,7 +1075,9 @@ FantomAttackerShell.hackrouter.func = function(shell,args=null)
 end function
 
 
-
+FantomComputerShell = {}
+FantomFileShell = {}
+//👀 whats this for?
 
 FantomAttackerShell.hack = {}
 FantomAttackerShell.hack.func = function(shell,args=null)
@@ -1211,6 +1212,12 @@ FantomSharedCommands.streamer.func = function(args=null)
     end if
 end function
 
+FantomSharedCommands.credits = {}
+FantomSharedCommands.credits.func = function(shell,args=null)
+    FantomNotify("Up until April 22 2023 all of Fantom Rewritten was written by potato not including forks",true)
+    FantomNotify("<color=green>AwETux</color> - Rewrote processlogger command to help fix it (will be in later)",false)
+    FantomNotify("<color=green>gk258/TheGateKeeper</color> - Teaching me stuff & helping with finder command",false)
+end function
 
 FantomSharedCommands.help = {}
 FantomSharedCommands.help.func = function(shell,args=null)
