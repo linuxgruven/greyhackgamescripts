@@ -1,6 +1,6 @@
 
 //update log:
-//- Fantom now contains a 'credits' command to thank the people who helped
+//fantom's 'processlogger' command has been rewritten! its less broken (thank you AwETuX)
 
 //ideas:
 
@@ -1328,76 +1328,60 @@ FantomSharedCommands.test.func = function(shell,args=null)
 end function
 
 FantomSharedCommands.processlogger = {}
-FantomSharedCommands.processlogger.func = function(shell,args=null)
+FantomSharedCommands.processlogger=function(args=null)
+    //i have troubles reading others work
 
-    FantomNotify("ProcessLogger is designed to log newly opened processes (rshell detector)")
-    if active_user != "root" then
-        FantomNotify("Running Fantom as root is recommended for ProcessLogger so it's not easily killed")
-    end if
-    FantomNotify("See a process you don't recognize? kill it.",true)
-    pidlist = []
-    b = [] //pids that are now dead (closed processes) are added here and removed from the pidlist later in the code
-    first = true //Is this the first run of the loop?
-                    //If so, we append every currently open process into the pid list.
-                    //This is so it doesnt flood the user with all the currently open processes as a "new process"
-    old = get_shell.host_computer.show_procs             
-    while true 
-        current = get_shell.host_computer.show_procs
-        for line in current.split("\n")
-            data = line.split(" ")
-            pid = data[1]
+      r={}
+    c={}
+      o={}
+    processlist=get_shell.host_computer.show_procs.split(char(10))
+    processlist.pull
+    for process in processlist
 
-            if pid == "PID" then
-                continue
-            end if
+      process = process.split(" ")
+      process.pull
+      data=process.pull
 
-            if first then
-                pidlist.push(pid)
-            end if
+      i=process.pop //i have no idea
+      o[data]=i
 
+      c[data]=i
 
-            if current.split("\n").len < old.split("\n").len then
-                closedpid = old.split("\n")[current.split("\n").len].split(" ")[1]
-                closedproc = old.split("\n")[current.split("\n").len].split(" ")[4]
-                FantomNotify("Process was closed. "+closedpid+" "+closedproc,true)
-                b.push(closedpid)
-                old = current
-            end if
+    end for
+      FantomNotify ("Monitoring system processes...")
+    while true
 
+      processlist=get_shell.host_computer.show_procs.split(char(10))
+      processlist.pull
 
-            dupe = false
-            for pidd in pidlist
-                if pid == pidd then
-                    dupe = true
-                end if
-            end for
-            if not dupe then
-                FantomNotify("New process. "+pid+" "+data[4], true)
-                pidlist.push(pid)
-            end if
+          for process in processlist
+              process=process.split(" ")
+              process.pull
+              r[process.pull]=process.pop
+          end for
 
+      for n in r
+              p=n.key
+              if c.hasIndex(p)==0 then
+                  FantomNotify(n.value+" was launched!")
+                  c[p]=n.value
+        end if
+      end for
 
-            i = 0
-            for deadpid in b
-                for pid in pidlist
-                    if pid == deadpid then
-                        pidlist.remove(i)
-                    end if
-                    i = i + 1
-                end for
-            end for
+          if r.len<o.len then
+              for a in o
+                  if r.hasIndex(a.key)==0 then
+                      FantomNotify(a.value+" was closed!",true)
+                      c.remove(a.key)
+                      break
+                  end if
+              end for
 
-        end for
-
-        b=[]
-        first = false
-        //pidlist = []
-        old = current
+          end if
+      o=r
+          r={}
     end while
-
-
-end function
-
+  end function
 
 
 
