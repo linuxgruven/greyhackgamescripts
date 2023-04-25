@@ -1,6 +1,7 @@
 
 //update log:
-//fantom's 'processlogger' command has been rewritten! its less broken (thank you AwETuX)
+//Fantoms 'finder' command can now search for kernel_router versions
+    //make sure you type the command exactly like this 'finder kernel_router [version here]'
 
 //ideas:
 
@@ -193,6 +194,31 @@ ipgen = function()
     return ip
 end function
 
+//old
+//findService = function(service)
+//
+//    while true
+//        ip = ipgen
+//        r = get_router(ip)
+//
+//        if typeof(r) == "router" then
+//
+//                ports = r.used_ports
+//
+//                for port in ports
+//
+//                    if not r.port_info(port).indexOf(service) == null then
+//                        return ip
+//                    end if
+//
+//                end for
+//
+//        
+//        end if
+//
+//
+//    end while
+//end function
 
 findService = function(service)
 
@@ -210,6 +236,13 @@ findService = function(service)
                         return ip
                     end if
 
+                    split = service.split(" ")
+                    if split[0] == "kernel_router" then
+                        if r.kernel_version == split[1] then
+                            return ip
+                        end if
+                    end if
+
                 end for
 
         
@@ -218,7 +251,6 @@ findService = function(service)
 
     end while
 end function
-
 
 
 //this disables the metaxploit an crypto check before going into attacker mode
@@ -1021,9 +1053,11 @@ FantomAttackerShell.hackrouter.func = function(shell,args=null)
                     end if
                 end if
                 
-                users = vuln.File("/home").get_folders
+                usersFile = vuln.File("/home")
 
-                if users then
+                if usersFile then
+
+                    users = usersFile.get_folders
 
                     for user in users
 
