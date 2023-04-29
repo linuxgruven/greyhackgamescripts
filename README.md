@@ -12,6 +12,24 @@ https://github.com/saschahi/greyhackgamescripts
 Do feel free to open an issue if something breaks or you want to suggest something.
 
 
+**Installing Fantom**
+```
+	1) Goto https://github.com/tball1/greyhackgamescripts
+	2) Download either with git or download as zip
+	3) if you downloaded it as a zip be sure you extract it and open the folder otherwise just open the folder
+	4) open FantomModular/fantom.src and visit line 737
+	4) replace all of the occurrences of "potato" to your ingame username
+	5) in game make a directory called "commands" in your users home folder
+	6) in FantomModular/commands open each file and copy/paste into in-game codeeditor and save under the same file name with a .src extension in the ingame commands directory
+	7) assuming everything setup properly copy the code from FantomModular/fantom.gs into code editor and build it into an executable
+```
+
+**Setting up Fantom's brute command**
+```
+	Making this easier
+```
+
+
         //Biggest Changes:
 
                 //Fantom setup - Setting up Fantom has changed and so I created a installer program for the less knowledgable.
