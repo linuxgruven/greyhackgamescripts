@@ -4,6 +4,9 @@
 
     //Object shells are unique shells in Fantom in that certain commands only appear if you have the right object
 
+        //added ssh
+        //edited help menus
+        //fixed crash in ss
 
     FantomObjectShell = {}
     FantomObjectShell.Object = null
@@ -98,12 +101,13 @@
             print("    <color=green>delgroup [group]</color> - <color=#3f3e40>Deletes a group</color>")
             print("    <color=green>ps</color> - <color=#3f3e40>Show currently running processes</color>")
             print("    <color=green>term</color> - <color=#3f3e40>Drop into a regular terminal</color>")
+            print("    <color=green>up</color> - <color=#3f3e40>Upload Fantom to target in /home/guest</color>")
             //print("    <color=green>neo [file]</color> - <color=#3f3e40>Starts the text editor 'Fantom Neo' </color>")
             print("\n<color=green>Network</color>")
             print("    <color=green>ss</color> - <color=#3f3e40>View internal/external open ports of current computer</color>")
             print("    <color=green>lmap</color> - <color=#3f3e40>Shows information about inside the network using current device</color>")
             print("    <color=green>ifconfig</color> - <color=#3f3e40>Displays local and public IP</color>")
-            print("    <color=green>ssh [user@password] [ip]</color> - <color=#3f3e40>SSH into another computer</color>\n")
+            print("    <color=green>ssh [user@password] [ip] [opt:port]</color> - <color=#3f3e40>SSH into another computer</color>\n")
         end if
 
 
@@ -215,6 +219,11 @@
                     return
                 end if
 
+                if not args.hasIndex(1) then
+                    FantomNotify("Missing 2nd parameter.",true)
+                    return
+                end if
+
                 split = args[1].split("/")
                 filename = split[split.len-1]
                 pathh = split[:-1].join("/")
@@ -263,7 +272,8 @@
                     if typeof(s) == "string" then
                         FantomNotify("Failed with reason: "+s,true)
                     end if
-
+                else
+                    FantomNotify("Missing 2nd parameter.",true)
                 end if
             end function
 
@@ -279,7 +289,8 @@
                     if typeof(s) == "string" then
                         FantomNotify("Failed with reason: "+s,true)
                     end if
-
+                else
+                    FantomNotify("Missing 2nd parameter.",true)
                 end if
             end function
 
@@ -296,7 +307,8 @@
                     if typeof(s) == "string" then
                         FantomNotify("Failed with reason: "+s,true)
                     end if
-
+                else
+                    FantomNotify("Missing 2nd parameter.",true)
                 end if
             end function
 
@@ -313,7 +325,8 @@
                     if typeof(s) == "string" then
                         FantomNotify("Failed with reason: "+s,true)
                     end if
-
+                else
+                    FantomNotify("Missing 2nd parameter.",true)
                 end if
             end function
 
@@ -406,11 +419,31 @@
                 end if
             end function
 
+
+            FantomObjectShell.ls = {}
+            FantomObjectShell.ls.func = function(shell,args)
+                if args == null then
+                    FantomNotify("No args given. assuming root directory",true)
+                    root = FantomObjectShell.Object.parent
+                    for junk in root.get_folders+root.get_files
+                        print(junk.name+" "+junk.group+" "+junk.owner+" "+junk.size)
+                    end for
+                    return
+                end if
+
+                f = findFolderWpath(FantomObjectShell.Object,args[0])
+                for junk in f.get_folders+f.get_files
+                    print(junk.name+" "+junk.group+" "+junk.owner+" "+junk.size)
+                end for
+
+            end function
+
             FantomObjectShell.cat = {}
             FantomObjectShell.cat.func = function(shell,args)
                 if args == null then
                     FantomNotify("Please specify a file path.",true)
                 end if
+
 
                 f = findFolderWpath(FantomObjectShell.Object,args[0])
 
@@ -429,6 +462,10 @@
             FantomObjectShell.mv.func = function(shell,args)
                 if args == null then
                     FantomNotify("Please specify a file and path.",true)
+                    return
+                end if
+                if not args.hasIndex(1) then
+                    FantomNotify("Missing 2nd parameter.",true)
                     return
                 end if
                 f = findFolderWpath(FantomObjectShell.Object,args[0])
@@ -455,6 +492,10 @@
             FantomObjectShell.cp.func = function(shell,args)
                 if args == null then
                     FantomNotify("Please specify a file and path.",true)
+                    return
+                end if
+                if not args.hasIndex(1) then
+                    FantomNotify("Missing 2nd parameter.",true)
                     return
                 end if
                 f = findFolderWpath(FantomObjectShell.Object,args[0])
@@ -543,6 +584,14 @@
                 end if
 
                 folder = FantomObjectShell.Object.host_computer.File(args[0])
+                if not folder then
+                    FantomNotify("Invalid path.",true)
+                    return
+                end if
+                if not folder.is_folder then
+                    FantomNotify("Not a folder.",true)
+                    return
+                end if
                 stuff = folder.get_files + folder.get_folders
                 for file in stuff
                     print(file.name+" "+file.owner+" "+file.permissions)
@@ -747,9 +796,41 @@
                 p = FantomObjectShell.Object.host_computer.get_ports
                 for port in p
                     info = get_router().port_info(port)
-                    print(port.lan_ip+" "+info)
+                    print(port.get_lan_ip+" "+info)
                 end for
             end function
+
+            FantomObjectShell.ssh = {}
+            FantomObjectShell.ssh.func = function(shell,args)
+                if args == null then
+                    FantomObjectShell("Missing arguments. see 'commands'", true)
+                    return
+                end if
+
+                user_details = args[0].split("@")
+
+                if not user_details then
+                    FantomNotify("Invalid user details.")
+                    return
+                end if
+
+                ip = args[1]
+                if args.hasIndex(2) then
+                    sh = get_shell.connect_service(ip,args[2].to_int,user_details[0],user_details[1])
+                else
+                    sh = get_shell.connect_service(ip,22,user_details[0],user_details[1])
+                end if
+
+                if typeof(sh) == "shell" then
+                    FantomNotify("Success! add it to sessions manager? y/n",false)
+                    said = user_input(": ",0,1)
+                    if said.lower == "y" then
+                        globals.sessions.push(sh)
+                    end if
+                end if
+
+            end function
+
 
 
             FantomObjectShell.ifconfig = {}
