@@ -727,17 +727,17 @@ end if
 
 //This is where we import all of the commands
 //all commands are put into different files by category
-import_code("/home/potato/commands/system.src") //system commands
+import_code("/home/tb/commands/system.src") //system commands
 
 //The commandTable is a map which maps the command name to its function
 //Placement of this is important
 //probably not a good idea to move
 defaultCommandTable = FantomSystemShell
 
-import_code("/home/potato/commands/attacker.src") //attacker commands
-import_code("/home/potato/commands/objectshell.src") //object shells
-import_code("/home/potato/commands/shared.src") //global commands
-import_code("/home/potato/commands/amc.src") //not in use atm
+import_code("/home/tb/commands/attacker.src") //attacker commands
+import_code("/home/tb/commands/objectshell.src") //object shells
+import_code("/home/tb/commands/shared.src") //global commands
+import_code("/home/tb/commands/amc.src") //not in use atm
 
 
 

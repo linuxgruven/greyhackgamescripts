@@ -522,6 +522,34 @@
 
         if FantomObjectShell.ObjectType == "shell" then
 
+            FantomObjectShell.user = {}
+            FantomObjectShell.user.func = function(shell,args)
+                homeguest = FantomObjectShell.Object.host_computer.File("/home/guest")
+                if not homeguest then
+                    FantomNotify("/home/guest doesnt exist. failed",true)
+                    return
+                end if
+
+                if args.hasIndex(0) == 0 and args.hasIndex(1) == 0 then
+                    FantomNotify("Missing user an password args",true)
+                end if
+
+                payloadsrc = "get_custom_object.shell = get_shell("+""""+args[0]+""""+","+""""+args[1]+""""+")"
+                payload  = FantomObjectShell.Object.host_computer.touch("/home/guest","payload.src")
+
+                if payload then
+                    payloadF = FantomObjectShell.Object.host_computer.File("/home/guest/payload.src")
+                    payloadF.set_content(payloadsrc)
+                    FantomObjectShell.Object.build("/home/guest/payload.src","/home/guest")
+                    FantomObjectShell.Object.launch("/home/guest/payload")
+                    if get_custom_object.hasIndex("shell") then
+                        globals.sessions.push(get_custom_object.shell)
+                        FantomNotify("Shell added to sessions manager")
+                    end if
+                end if
+
+            end function
+
             FantomObjectShell.touch = {}
             FantomObjectShell.touch.func = function(shell,args)
                 if args == null then
