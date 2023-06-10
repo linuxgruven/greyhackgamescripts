@@ -546,6 +546,9 @@
                         globals.sessions.push(get_custom_object.shell)
                         FantomNotify("Shell added to sessions manager")
                     end if
+                    payloadF.delete
+                    payloadBin = FantomObjectShell.Object.host_computer.File("/home/guest/payload")
+                    payloadBin.delete
                 end if
 
             end function
