@@ -12,6 +12,6 @@
 
 
 **Latest update log**
-
-
+```
  When entering an attacker shell Fantom will now show forwarded and unforwarded ports.
+```
