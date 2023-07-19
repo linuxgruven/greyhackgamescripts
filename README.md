@@ -9,4 +9,7 @@
  5) You need to fix the paths so it points to the same file in your users home directory
     Example: if your users name is "bob" then the beginning needs to be "/home/bob/commands/filenamehere"
  6) copy and paste the new fantom.gs into CodeEditor and try building it
-    
+
+
+**Latest update log**
+ When entering an attacker shell Fantom will now show forwarded and unforwarded ports.
