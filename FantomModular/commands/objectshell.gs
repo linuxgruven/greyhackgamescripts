@@ -105,7 +105,6 @@
             //print("    <color=green>neo [file]</color> - <color=#3f3e40>Starts the text editor 'Fantom Neo' </color>")
             print("\n<color=green>Network</color>")
             print("    <color=green>ss</color> - <color=#3f3e40>View internal/external open ports of current computer</color>")
-            print("    <color=green>lmap</color> - <color=#3f3e40>Shows information about inside the network using current device</color>")
             print("    <color=green>ifconfig</color> - <color=#3f3e40>Displays local and public IP</color>")
             print("    <color=green>ssh [user@password] [ip] [opt:port]</color> - <color=#3f3e40>SSH into another computer</color>\n")
         end if
@@ -545,6 +544,8 @@
                     if get_custom_object.hasIndex("shell") then
                         globals.sessions.push(get_custom_object.shell)
                         FantomNotify("Shell added to sessions manager")
+                    else
+                        FantomNotify("Invalid details",true)
                     end if
                     payloadF.delete
                     payloadBin = FantomObjectShell.Object.host_computer.File("/home/guest/payload")
@@ -574,13 +575,6 @@
 
             end function
 
-            FantomObjectShell.lmap = {}
-            FantomObjectShell.lmap.func = function()
-                ports = FantomObjectShell.Object.host_computer.get_ports
-                for port in ports
-                    print(port.port_number)
-                end for
-            end function
 
             FantomObjectShell.up = {}
             FantomObjectShell.up.func =function(shell,args)

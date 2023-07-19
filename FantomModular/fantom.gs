@@ -69,7 +69,26 @@ ShowTargetInfo = function(ip)
         format_string = format_string + "\n" + port.get_lan_ip + " " + port.port_number + " " + r.port_info(port) + " " + open
     end for
 
+    print("\n")
 
+    format_string2 = "LAN PORT SERVICE VERSION OPEN"
+    for lan in r.devices_lan_ip
+        for port in r.device_ports(lan)
+                if port == null then continue
+
+                if typeof(port) == "string" then continue
+                
+                open = "false"
+                if not port.is_closed then
+                    open = "true"
+                end if
+            
+                format_string2 = format_string2 + "\n" + port.get_lan_ip + " " + port.port_number + " " + r.port_info(port) + " " + open
+        end for
+    end for
+
+
+    formatted2 = format_columns(format_string2)
     formatted = format_columns(format_string)
 
     print("<color=green>Recon information.</color>\n")
@@ -80,6 +99,10 @@ ShowTargetInfo = function(ip)
     end if
 
     print(formatted)
+
+    print("\nBelow are forwarded/unforwarded ports within the network.\n")
+
+    print(formatted2)
 
     print("\n")
 
@@ -727,17 +750,17 @@ end if
 
 //This is where we import all of the commands
 //all commands are put into different files by category
-import_code("/home/tb/commands/system.src") //system commands
+import_code("/home/potato/commands/system.gs") //system commands
 
 //The commandTable is a map which maps the command name to its function
 //Placement of this is important
 //probably not a good idea to move
 defaultCommandTable = FantomSystemShell
 
-import_code("/home/tb/commands/attacker.src") //attacker commands
-import_code("/home/tb/commands/objectshell.src") //object shells
-import_code("/home/tb/commands/shared.src") //global commands
-import_code("/home/tb/commands/amc.src") //not in use atm
+import_code("/home/potato/commands/attacker.gs") //attacker commands
+import_code("/home/potato/commands/objectshell.gs") //object shells
+import_code("/home/potato/commands/shared.gs") //global commands
+import_code("/home/potato/commands/amc.gs") //not in use atm
 
 
 
